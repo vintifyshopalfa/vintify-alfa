@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => {
       host: true,
       port: PORT,
       open: false,
-      allowedHosts: PUBLIC_BASE_URL ? [PUBLIC_BASE_URL.replace('https://', '').replace('http://', '').split('/')[0]] : [],
+      allowedHosts: true,
     },
   };
 });

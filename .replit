@@ -1,0 +1,112 @@
+modules = ["nodejs-20", "web", "postgresql-16"]
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+BACKEND_URL = "https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev:9000"
+STORE_CORS = "http://localhost:5000,https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev"
+ADMIN_CORS = "http://localhost:5173,https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev:5173,https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev"
+AUTH_CORS = "http://localhost:5000,http://localhost:5173,http://localhost:7001,https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev,https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev:5173,https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev:7001"
+VENDOR_CORS = "http://localhost:7001,https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev:7001,https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev"
+NEXT_PUBLIC_MEDUSA_BACKEND_URL = "https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev:9000"
+MEDUSA_BACKEND_URL = "https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev:9000"
+NEXT_PUBLIC_BASE_URL = "https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev"
+VITE_MEDUSA_BACKEND_URL = "https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev:9000"
+VITE_MEDUSA_STOREFRONT_URL = "https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev"
+VITE_PUBLIC_BASE_URL = "https://7a82d22f-8ef2-4f8c-8ea0-02afc49c45ac-00-1sy289og740fh.kirk.replit.dev:5173"
+JWT_SECRET = "supersecret-replit-dev"
+COOKIE_SECRET = "supersecret-replit-dev"
+NODE_ENV = "development"
+PORT = "5000"
+MEDUSA_BACKEND_PORT = "9000"
+NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY = "pk_66b2b0a8f6cfa84d9647dda396360a9db1cd5be6f7ea1d7ce594a4db948e2cbb"
+VITE_PUBLISHABLE_API_KEY = "pk_66b2b0a8f6cfa84d9647dda396360a9db1cd5be6f7ea1d7ce594a4db948e2cbb"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Backend"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Admin Panel"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Vendor Panel"
+
+[[workflows.workflow]]
+name = "Backend"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash -c 'cd backend/.medusa/server && PORT=9000 pnpm exec medusa start'"
+waitForPort = 9000
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash -c 'cd storefront && PORT=5000 pnpm run dev'"
+waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Admin Panel"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash -c 'cd admin-panel && pnpm dev'"
+waitForPort = 5173
+
+[[workflows.workflow]]
+name = "Vendor Panel"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash -c 'cd vendor-panel && VITE_PUBLISHABLE_API_KEY=\"$VITE_PUBLISHABLE_API_KEY\" PORT=6000 pnpm exec vite --port 6000 --host'"
+waitForPort = 6000
+
+[[ports]]
+localPort = 9000
+externalPort = 9000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 6000
+externalPort = 6000

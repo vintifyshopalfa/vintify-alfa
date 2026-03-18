@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => {
       host: true,
       port: parseInt(process.env.PORT || '5173'),
       open: false,
-      allowedHosts: PUBLIC_BASE_URL ? [PUBLIC_BASE_URL.replace('https://', '').replace('http://', '').split('/')[0]] : [],
+      allowedHosts: true,
     },
     optimizeDeps: {
       entries: [],
