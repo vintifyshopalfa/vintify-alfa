@@ -1,0 +1,41 @@
+Dado este repositório e o documento técnico fornecido abaixo, altere o código conforme os seguintes requisitos, respeitando integralmente as limitações do plano freemium do Replit (CPU, RAM, tempo de execução e créditos disponíveis).
+
+Execute as mudanças de forma incremental e eficiente:
+- Priorize alterações pequenas e modulares por arquivo ou módulo.
+- Use commits claros e separados para cada grande seção (Storefront, Backend, VendorPanel, Admin).
+- Otimize todo o código para baixo consumo de recursos (evite loops pesados, prefira async/await, cache onde possível e minimize dependências desnecessárias).
+- Sempre que possível, teste localmente no Replit antes de prosseguir para a próxima etapa.
+
+### 1. Histórias de Usuário
+Altere todas as User Stories existentes para atender exatamente às demandas descritas em cada uma. Faça as implementações de forma leve e otimizada para que o sistema rode sem exceder os limites de créditos e tempo de execução do plano freemium do Replit.
+
+### 2. Alterações Adicionais por Módulo
+
+**Storefront**
+- Torne a UX e a identidade visual o mais próximo possível do Vinted.pt (layout clean, cores, tipografia, navegação e fluxo de compra) e deste website, que  uma beta do que iremos implementar no Replit https://style-swap-6f278d84.base44.app/.
+- Implemente sistema completo de redes sociais: likes, comentários, posts e feed com algoritmo similar ao do Vinted.
+- Reaproveite as histórias de usuário anteriores já implementadas.
+
+
+**Backend**
+- Atualize os módulos para integrações oficiais com: Stripe, WorkOS, Algolia e TalkJS.
+- Faca uma inversao de dependencia para que os modulos de pagamentos nao dependam da API do Stripe, e possam mudar de gateway se necessarios
+- Implemente coleta de logs de vendas de produtos e usuários de forma que:
+  - Esteja 100% em conformidade com a LGPD.
+  - Impeça reembolsos fraudulentos e tentativas de exclusão/apagamento de dados por fraudadores.
+- Adicione mecanismo de proteção contra ataques de rainbow table tanto nos domínios/módulos quanto no banco de dados de usuários, utilizando boas práticas de gestão de identidade (hashing forte, salt, pepper, etc.).
+- Siga rigorosamente as recomendações de segurança da OWASP ASVS (nível 2 ou superior quando aplicável) para tornar o código seguro e resistente a invasões.
+
+**VendorPanel**
+- Crie um mecanismo de CMS (Content Management System) para que o vendedor consiga criar e publicar conteúdo tanto no Vintify quanto diretamente no Instagram e Facebook.
+- Utilize as APIs oficiais da META (Instagram Graph API + Facebook Graph API) para gerenciar posts, agendamento e métricas.
+
+**Admin**
+- Inclua as principais métricas essenciais de Marketplace listadas em: https://stripe.com/br/resources/more/14-key-marketplace-metrics.
+- Reaproveite as histórias de usuário já existentes para o painel Admin.
+- Desacople completamente os serviços terceiros (Stripe, WorkOS, etc.) de forma que, mesmo se o painel Admin for comprometido, a autenticação, pagamentos e serviços críticos da plataforma permaneçam protegidos e sem risco.
+
+**ENV**
+Nao deixe as chaves de API externa publico na.env, de forma que pessoas que acessem o repositorio publico nao consigam burlar a seguranca, utilize o Gitignore mais as praticas OWASP ASVS
+
+Execute as alterações passo a passo, informando após cada grande módulo concluído. Priorize sempre performance e segurança dentro das restrições do plano freemium do Replit.
