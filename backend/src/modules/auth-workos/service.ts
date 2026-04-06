@@ -56,10 +56,10 @@ function verifySignedState(state: string): boolean {
     .update(payload)
     .digest("hex")
 
-  const sigValid = crypto.timingSafeEqual(
-    Buffer.from(signature, "hex"),
-    Buffer.from(expectedSig, "hex")
-  )
+  const sigBuffer = Buffer.from(signature, "hex")
+  const expectedSigBuffer = Buffer.from(expectedSig, "hex")
+  if (sigBuffer.length !== expectedSigBuffer.length) return false
+  const sigValid = crypto.timingSafeEqual(sigBuffer, expectedSigBuffer)
   if (!sigValid) return false
 
   const expiry = parseInt(expiresAt, 10)
