@@ -22,28 +22,39 @@ export type PostRecord = {
   updated_at: Date
 }
 
-function parseImages(raw: string): string[] {
+function parseImages(raw: unknown): string[] {
   if (typeof raw !== "string") return []
   try {
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
+    return Array.isArray(parsed) ? (parsed as string[]) : []
   } catch {
     return []
   }
 }
 
-function toPostRecord(raw: Record<string, unknown>): PostRecord {
+function entityToPostRecord(entity: {
+  id: string
+  seller_id: string
+  body: string
+  images: unknown
+  likes_count: number
+  comments_count: number
+  created_at: Date
+  updated_at: Date
+}): PostRecord {
   return {
-    id: raw.id as string,
-    seller_id: raw.seller_id as string,
-    body: raw.body as string,
-    images: parseImages(raw.images as string),
-    likes_count: (raw.likes_count as number) ?? 0,
-    comments_count: (raw.comments_count as number) ?? 0,
-    created_at: raw.created_at as Date,
-    updated_at: raw.updated_at as Date,
+    id: entity.id,
+    seller_id: entity.seller_id,
+    body: entity.body,
+    images: parseImages(entity.images),
+    likes_count: entity.likes_count ?? 0,
+    comments_count: entity.comments_count ?? 0,
+    created_at: entity.created_at,
+    updated_at: entity.updated_at,
   }
 }
+
+type EntityPost = Awaited<ReturnType<InstanceType<typeof SocialService>["listPosts"]>>[number]
 
 class SocialService extends MedusaService({ Post, Like, Comment }) {
   async createPost(data: PostData): Promise<PostRecord> {
@@ -54,7 +65,16 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
       likes_count: data.likes_count ?? 0,
       comments_count: data.comments_count ?? 0,
     })
-    return toPostRecord(created as unknown as Record<string, unknown>)
+    return entityToPostRecord({
+      id: created.id,
+      seller_id: created.seller_id,
+      body: created.body,
+      images: created.images,
+      likes_count: (created.likes_count as number) ?? 0,
+      comments_count: (created.comments_count as number) ?? 0,
+      created_at: created.created_at as Date,
+      updated_at: created.updated_at as Date,
+    })
   }
 
   async toggleLike(
@@ -88,7 +108,7 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
       const posts = await this.listPosts({ id: targetId })
       if (posts.length > 0) {
         const post = posts[0]
-        const newCount = ((post.likes_count as number) || 0) + 1
+        const newCount = ((post.likes_count as number) ?? 0) + 1
         await this.updatePosts({ id: targetId }, { likes_count: newCount })
         return { liked: true, count: newCount }
       }
@@ -96,6 +116,16 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
 
     const allLikes = await this.listLikes({ target_type: targetType, target_id: targetId })
     return { liked: true, count: allLikes.length }
+  }
+
+  async getLikeCount(
+    targetType: "post" | "product",
+    targetId: string,
+    customerId?: string
+  ): Promise<{ count: number; liked: boolean }> {
+    const likes = await this.listLikes({ target_type: targetType, target_id: targetId })
+    const liked = customerId ? likes.some((l) => l.customer_id === customerId) : false
+    return { count: likes.length, liked }
   }
 
   async addComment(targetId: string, customerId: string, body: string) {
@@ -109,20 +139,11 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
     const posts = await this.listPosts({ id: targetId })
     if (posts.length > 0) {
       const post = posts[0]
-      await this.updatePosts({ id: targetId }, { comments_count: ((post.comments_count as number) || 0) + 1 })
+      const currentCount = (post.comments_count as number) ?? 0
+      await this.updatePosts({ id: targetId }, { comments_count: currentCount + 1 })
     }
 
     return comment
-  }
-
-  async getLikeCount(
-    targetType: "post" | "product",
-    targetId: string,
-    customerId?: string
-  ): Promise<{ count: number; liked: boolean }> {
-    const likes = await this.listLikes({ target_type: targetType, target_id: targetId })
-    const liked = customerId ? likes.some((l) => l.customer_id === customerId) : false
-    return { count: likes.length, liked }
   }
 
   async getTrendingProductIds(limit: number): Promise<Array<{ target_id: string; count: number }>> {
@@ -158,41 +179,47 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
     }
 
     if (options?.sort === "mixed" || (!options?.sort && !options?.seller_id)) {
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
       const followedIds = options?.followed_seller_ids ?? []
 
       const [recentRaw, popularRaw] = await Promise.all([
-        this.listPosts(
-          { ...baseFilter, created_at: { $gte: sevenDaysAgo } as unknown as string },
-          { skip: 0, take: limit * 3, order: { created_at: "DESC" } }
-        ),
-        this.listPosts(baseFilter, { skip: 0, take: limit * 2, order: { likes_count: "DESC" } }),
+        this.listPosts(baseFilter, { skip: 0, take: 200, order: { created_at: "DESC" } }),
+        this.listPosts(baseFilter, { skip: 0, take: 100, order: { likes_count: "DESC" } }),
       ])
 
       const seen = new Set<string>()
-      const scored: Array<{ raw: Record<string, unknown>; score: number }> = []
+      const scored: Array<{ entity: EntityPost; score: number }> = []
 
-      const allRaw = [...recentRaw, ...popularRaw] as Array<Record<string, unknown>>
-      for (const raw of allRaw) {
-        const id = raw.id as string
-        if (seen.has(id)) continue
-        seen.add(id)
+      for (const entity of [...recentRaw, ...popularRaw]) {
+        if (seen.has(entity.id)) continue
+        seen.add(entity.id)
 
-        let score = (raw.likes_count as number) ?? 0
-        const ageMs = Date.now() - new Date(raw.created_at as Date).getTime()
-        const ageHours = ageMs / (1000 * 60 * 60)
-        score += Math.max(0, 72 - ageHours)
-        if (followedIds.includes(raw.seller_id as string)) {
+        const sellerId = entity.seller_id as string
+        const likesCount = (entity.likes_count as number) ?? 0
+        const createdAt = entity.created_at as Date
+
+        let score = likesCount
+        const ageHours = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60)
+        score += Math.max(0, 168 - ageHours)
+        if (followedIds.includes(sellerId)) {
           score += 100
         }
-        scored.push({ raw, score })
+        scored.push({ entity, score })
       }
 
       scored.sort((a, b) => b.score - a.score)
 
-      const allCount = await this.listPosts(baseFilter).then((r) => r.length)
-      const paginated = scored.slice(offset, offset + limit).map((s) => toPostRecord(s.raw))
-      return { posts: paginated, count: allCount }
+      const poolCount = scored.length
+      const paginated = scored.slice(offset, offset + limit).map((s) => entityToPostRecord({
+        id: s.entity.id,
+        seller_id: s.entity.seller_id as string,
+        body: s.entity.body as string,
+        images: s.entity.images,
+        likes_count: (s.entity.likes_count as number) ?? 0,
+        comments_count: (s.entity.comments_count as number) ?? 0,
+        created_at: s.entity.created_at as Date,
+        updated_at: s.entity.updated_at as Date,
+      }))
+      return { posts: paginated, count: poolCount }
     }
 
     const orderKey = options?.sort === "trending" ? "likes_count" : "created_at"
@@ -203,10 +230,18 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
       this.listPosts(baseFilter),
     ])
 
-    return {
-      posts: (postsRaw as Array<Record<string, unknown>>).map(toPostRecord),
-      count: allRaw.length,
-    }
+    const posts = postsRaw.map((e) => entityToPostRecord({
+      id: e.id,
+      seller_id: e.seller_id as string,
+      body: e.body as string,
+      images: e.images,
+      likes_count: (e.likes_count as number) ?? 0,
+      comments_count: (e.comments_count as number) ?? 0,
+      created_at: e.created_at as Date,
+      updated_at: e.updated_at as Date,
+    }))
+
+    return { posts, count: allRaw.length }
   }
 }
 

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { usePathname } from "next/navigation"
 import { Popup, useSession } from "@talkjs/react"
+import Talk from "talkjs"
 
 type ContactSellerButtonProps = {
   sellerId: string
@@ -31,7 +32,24 @@ export function ContactSellerButton({ sellerId, sellerName, productTitle }: Cont
     )
   }
 
-  const conversationId = `${session.me?.id}-${sellerId}`
+  function syncConversation(sess: Talk.Session): Talk.ConversationBuilder {
+    const buyerId = sess.me.id
+    const conversationId = `seller-contact-${sellerId}-${buyerId}`
+
+    const sellerUser = new Talk.User({
+      id: sellerId,
+      name: sellerName,
+      role: "seller",
+    })
+
+    const conversation = sess.getOrCreateConversation(conversationId)
+    conversation.setParticipant(sess.me)
+    conversation.setParticipant(sellerUser)
+    if (productTitle) {
+      conversation.subject = `Inquiry: ${productTitle}`
+    }
+    return conversation
+  }
 
   return (
     <>
@@ -48,7 +66,7 @@ export function ContactSellerButton({ sellerId, sellerName, productTitle }: Cont
 
       {popupOpen && (
         <Popup
-          conversationId={conversationId}
+          syncConversation={syncConversation}
           show={popupOpen}
           onClose={() => setPopupOpen(false)}
         />
