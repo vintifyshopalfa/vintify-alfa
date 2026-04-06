@@ -5,7 +5,17 @@ const BCRYPT_ROUNDS = 12
 function getPepper(): string {
   const pepper = process.env.PASSWORD_PEPPER
   if (!pepper) {
-    console.warn("[Security] PASSWORD_PEPPER env var not set — using empty pepper. Set this in production!")
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "[Security] PASSWORD_PEPPER env var is required in production. " +
+          "Set a random 32+ character value to protect password hashes."
+      )
+    }
+    console.warn(
+      "[Security] WARNING: PASSWORD_PEPPER is not set. " +
+        "All password hashes will be unsalted with an empty pepper. " +
+        "This is insecure — set PASSWORD_PEPPER before going to production."
+    )
     return ""
   }
   return pepper

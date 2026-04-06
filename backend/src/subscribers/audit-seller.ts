@@ -32,7 +32,8 @@ export default async function auditSellerSubscriber({
       resource_id: data?.id,
       metadata: { event: name },
     })
-  } catch {
+  } catch (error) {
+    console.error("[AuditLog] Failed to write seller audit entry:", (error as Error).message)
   }
 }
 

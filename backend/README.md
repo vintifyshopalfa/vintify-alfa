@@ -1,83 +1,127 @@
-<p align="center">
-  <a href="https://www.medusajs.com">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/59018053/229103275-b5e482bb-4601-46e6-8142-244f531cebdb.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
-    <img alt="Medusa logo" src="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
-    </picture>
-  </a>
-</p>
-<h1 align="center">
-  Medusa
-</h1>
+# Vintify Backend
 
-<h4 align="center">
-  <a href="https://docs.medusajs.com">Documentation</a> |
-  <a href="https://www.medusajs.com">Website</a>
-</h4>
+Medusa.js v2 backend for the Vintify multi-vendor marketplace.
 
-<p align="center">
-  Building blocks for digital commerce
-</p>
-<p align="center">
-  <a href="https://github.com/medusajs/medusa/blob/master/CONTRIBUTING.md">
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat" alt="PRs welcome!" />
-  </a>
-    <a href="https://www.producthunt.com/posts/medusa"><img src="https://img.shields.io/badge/Product%20Hunt-%231%20Product%20of%20the%20Day-%23DA552E" alt="Product Hunt"></a>
-  <a href="https://discord.gg/xpCwq3Kfn8">
-    <img src="https://img.shields.io/badge/chat-on%20discord-7289DA.svg" alt="Discord Chat" />
-  </a>
-  <a href="https://twitter.com/intent/follow?screen_name=medusajs">
-    <img src="https://img.shields.io/twitter/follow/medusajs.svg?label=Follow%20@medusajs" alt="Follow @medusajs" />
-  </a>
-</p>
+## Required Environment Variables
 
-## Compatibility
+Copy `.env.example` to `.env` and fill in all required values before starting the server.
 
-This starter is compatible with versions >= 2 of `@medusajs/medusa`. 
+### Critical Secrets (required in all environments)
 
-## Getting Started
+| Variable | Description | Example |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection string | `postgres://user:pass@host:5432/db` |
+| `JWT_SECRET` | >= 32 char random secret for JWT signing | `openssl rand -hex 32` |
+| `COOKIE_SECRET` | >= 32 char random secret for cookie signing | `openssl rand -hex 32` |
+| `PASSWORD_PEPPER` | >= 32 char random string appended to passwords before bcrypt hashing | `openssl rand -hex 32` |
 
-Visit the [Quickstart Guide](https://docs.medusajs.com/learn/installation) to set up a server.
+> **Note:** In development, the server will start with a warning if `JWT_SECRET`, `COOKIE_SECRET`, or `PASSWORD_PEPPER` are missing. In production (`NODE_ENV=production`), the server will refuse to start without these values.
 
-Visit the [Docs](https://docs.medusajs.com/learn/installation#get-started) to learn more about our system requirements.
+### CORS Configuration
 
-## Algolia Integration
+| Variable | Description |
+|---|---|
+| `STORE_CORS` | Allowed origins for storefront (e.g. `http://localhost:5000`) |
+| `ADMIN_CORS` | Allowed origins for admin panel (e.g. `http://localhost:5173`) |
+| `VENDOR_CORS` | Allowed origins for vendor panel (e.g. `http://localhost:6000`) |
+| `AUTH_CORS` | Allowed origins for auth endpoints |
+| `BACKEND_URL` | Public URL of this backend (e.g. `http://localhost:9000`) |
 
-This backend includes automatic Algolia index setup via an initialization script. When you provide the following environment variables:
+### WorkOS SSO (optional — enables SSO login)
 
+| Variable | Description |
+|---|---|
+| `WORKOS_CLIENT_ID` | WorkOS Application Client ID |
+| `WORKOS_CLIENT_SECRET` | WorkOS Application Client Secret |
+| `WORKOS_REDIRECT_URI` | OAuth callback URL registered in WorkOS |
+| `WORKOS_STATE_SECRET` | >= 32 char secret for signing OAuth CSRF state tokens (falls back to `JWT_SECRET`) |
+| `WORKOS_ORGANIZATION_ID` | (optional) WorkOS Organization ID to scope SSO to a specific org |
+| `WORKOS_REQUIRE_MFA` | Set to `"true"` to reject logins where MFA was not verified |
+
+**WorkOS MFA Setup:**
+1. In the WorkOS dashboard, navigate to your Organization -> Authentication -> Factors
+2. Enable TOTP and/or SMS factors for the organization
+3. Set `WORKOS_ORGANIZATION_ID` to the organization ID
+4. Set `WORKOS_REQUIRE_MFA=true` to enforce MFA at the application layer
+5. WorkOS enforces the MFA policy at the IdP level when an organization policy requires it
+
+### Stripe Payments (optional — enables payouts)
+
+| Variable | Description |
+|---|---|
+| `STRIPE_SECRET_API_KEY` | Stripe secret key (`sk_live_...` or `sk_test_...`) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (`whsec_...`) |
+
+### Algolia Search (optional — enables full-text search)
+
+| Variable | Description |
+|---|---|
+| `ALGOLIA_APP_ID` | Algolia Application ID |
+| `ALGOLIA_API_KEY` | Algolia Admin API Key (requires write access for seeding) |
+
+Run `pnpm ts-node src/scripts/init-algolia.ts` to configure indices and seed existing data from the database into Algolia.
+
+### Redis (optional — enables distributed caching, event bus, and rate limiting)
+
+| Variable | Description |
+|---|---|
+| `REDIS_URL` | Redis connection URL (e.g. `redis://localhost:6379`) |
+
+When `REDIS_URL` is set, the auth rate limiter uses Redis for distributed rate limiting across all server instances. Without Redis, rate limiting is in-memory (suitable for single-instance deployments only).
+
+### Object Storage / MinIO (optional — replaces local file storage)
+
+| Variable | Description |
+|---|---|
+| `MINIO_ENDPOINT` | MinIO or S3-compatible endpoint |
+| `MINIO_ACCESS_KEY` | MinIO access key |
+| `MINIO_SECRET_KEY` | MinIO secret key |
+| `MINIO_BUCKET` | Target bucket name |
+
+### Email via Resend (optional)
+
+| Variable | Description |
+|---|---|
+| `RESEND_API_KEY` | Resend API key |
+| `RESEND_FROM_EMAIL` | Sender address (e.g. `noreply@yourdomain.com`) |
+
+### TalkJS (optional — enables in-app messaging)
+
+| Variable | Description |
+|---|---|
+| `TALKJS_APP_ID` | TalkJS Application ID |
+| `TALKJS_SECRET_KEY` | TalkJS Secret Key |
+
+## Running in Development
+
+```bash
+pnpm install
+cp .env.example .env
+# Edit .env with your values
+pnpm run dev
 ```
-ALGOLIA_API_KEY=your_admin_api_key
-ALGOLIA_APP_ID=your_application_id
+
+## Building for Production
+
+```bash
+pnpm medusa build
+cd .medusa/server
+pnpm install --ignore-scripts
+PORT=9000 pnpm medusa start
 ```
 
-The `init-algolia` script runs before the backend starts and will:
-1. Check if the "products" index exists in your Algolia application
-2. Create the index if it doesn't exist
-3. Configure the index using settings from `algolia-config.json` in the backend root directory
+## Generating a Secure Secret
 
-**Important Notes:**
-- Use your **Admin API Key** (not the Search-Only API Key) for the backend, as it needs write permissions to create indexes and sync products.
-- If you modify the Algolia configuration, **make sure to update both** `backend/algolia-config.json` and `storefront/algolia-config.json` to keep them aligned. The backend config is used to create/configure the index, while the storefront config is used by the frontend search interface.
-- The init script is run as part of the `start` command: `pnpm run init-algolia`
+```bash
+openssl rand -hex 32
+```
 
-No manual index creation or configuration is required - everything happens automatically on backend startup!
+Use this command to generate values for `JWT_SECRET`, `COOKIE_SECRET`, `PASSWORD_PEPPER`, and `WORKOS_STATE_SECRET`.
 
-## What is Medusa
+## Security Notes
 
-Medusa is a set of commerce modules and tools that allow you to build rich, reliable, and performant commerce applications without reinventing core commerce logic. The modules can be customized and used to build advanced ecommerce stores, marketplaces, or any product that needs foundational commerce primitives. All modules are open-source and freely available on npm.
-
-Learn more about [Medusa’s architecture](https://docs.medusajs.com/learn/introduction/architecture) and [commerce modules](https://docs.medusajs.com/learn/fundamentals/modules/commerce-modules) in the Docs.
-
-## Community & Contributions
-
-The community and core team are available in [GitHub Discussions](https://github.com/medusajs/medusa/discussions), where you can ask for support, discuss roadmap, and share ideas.
-
-Join our [Discord server](https://discord.com/invite/medusajs) to meet other community members.
-
-## Other channels
-
-- [GitHub Issues](https://github.com/medusajs/medusa/issues)
-- [Twitter](https://twitter.com/medusajs)
-- [LinkedIn](https://www.linkedin.com/company/medusajs)
-- [Medusa Blog](https://medusajs.com/blog/)
+- **Password hashing**: Passwords are hashed with bcrypt (12 rounds) + a pepper from `PASSWORD_PEPPER`. Store register/login use this custom path; do not remove `provider_metadata.password_hash` entries. Never change the pepper after users have registered.
+- **Rate limiting**: Auth endpoints (`/auth/*`, `/store/auth/*`) are rate-limited to 20 requests per 15 minutes per IP. Uses Redis if `REDIS_URL` is set, otherwise in-memory.
+- **Audit logs**: All operations are logged to the `audit_logs` table. Logs are append-only (enforced at both application and database trigger levels).
+- **CSRF protection**: WorkOS OAuth state tokens are HMAC-SHA256 signed with a 10-minute TTL. Buffer length is checked before constant-time comparison to prevent panics on malformed tokens.
+- **MFA**: Set `WORKOS_REQUIRE_MFA=true` to reject WorkOS SSO logins where the authentication method was not MFA-verified. Configure MFA policies in the WorkOS dashboard under Organization -> Factors.

@@ -14,24 +14,54 @@ type WorkOSProviderConfig = {
   redirectUri: string
 }
 
-type WorkOSProfile = {
+type WorkOSUser = {
   id: string
   email: string
-  firstName: string
-  lastName: string
+  firstName?: string | null
+  lastName?: string | null
 }
 
-interface WorkOSSSO {
-  getAuthorizationURL(opts: { clientID: string; redirectURI: string; state?: string }): string
-  getProfileAndToken(opts: { code: string; clientID: string }): Promise<{ profile: WorkOSProfile }>
+type AuthenticateResult = {
+  user: WorkOSUser
+  authenticationMethod?: string
+}
+
+interface WorkOSUserManagement {
+  getAuthorizationUrl(opts: {
+    clientId: string
+    redirectUri: string
+    state?: string
+    organizationId?: string
+  }): string
+  authenticateWithCode(opts: {
+    code: string
+    clientId: string
+  }): Promise<AuthenticateResult>
 }
 
 interface WorkOSClient {
-  sso: WorkOSSSO
+  userManagement: WorkOSUserManagement
 }
 
 function getSigningKey(): string {
-  return process.env.JWT_SECRET || process.env.COOKIE_SECRET || "vintify-workos-state-key"
+  const key =
+    process.env.WORKOS_STATE_SECRET ??
+    process.env.JWT_SECRET ??
+    process.env.COOKIE_SECRET
+  if (!key) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "[WorkOS] WORKOS_STATE_SECRET (or JWT_SECRET) is required in production. " +
+          "Set a random 32+ character secret to sign OAuth CSRF state tokens."
+      )
+    }
+    console.warn(
+      "[WorkOS] WARNING: WORKOS_STATE_SECRET is not set. Using insecure default — " +
+        "set this env var before deploying to production."
+    )
+    return "dev-workos-state-key-change-before-production"
+  }
+  return key
 }
 
 function createSignedState(): string {
@@ -59,13 +89,10 @@ function verifySignedState(state: string): boolean {
   const sigBuffer = Buffer.from(signature, "hex")
   const expectedSigBuffer = Buffer.from(expectedSig, "hex")
   if (sigBuffer.length !== expectedSigBuffer.length) return false
-  const sigValid = crypto.timingSafeEqual(sigBuffer, expectedSigBuffer)
-  if (!sigValid) return false
+  if (!crypto.timingSafeEqual(sigBuffer, expectedSigBuffer)) return false
 
   const expiry = parseInt(expiresAt, 10)
-  if (isNaN(expiry) || Date.now() > expiry) return false
-
-  return true
+  return !isNaN(expiry) && Date.now() <= expiry
 }
 
 class WorkOSAuthProvider extends AbstractAuthModuleProvider {
@@ -102,15 +129,16 @@ class WorkOSAuthProvider extends AbstractAuthModuleProvider {
     if (!code) {
       const state = createSignedState()
       const workos = await this.getWorkOS()
-      const authUrl = workos.sso.getAuthorizationURL({
-        clientID: this.config.clientId,
-        redirectURI: this.config.redirectUri,
+      const authUrlOptions: Parameters<WorkOSUserManagement["getAuthorizationUrl"]>[0] = {
+        clientId: this.config.clientId,
+        redirectUri: this.config.redirectUri,
         state,
-      })
-      return {
-        success: false,
-        location: authUrl,
       }
+      if (process.env.WORKOS_ORGANIZATION_ID) {
+        authUrlOptions.organizationId = process.env.WORKOS_ORGANIZATION_ID
+      }
+      const authUrl = workos.userManagement.getAuthorizationUrl(authUrlOptions)
+      return { success: false, location: authUrl }
     }
 
     if (!incomingState || !verifySignedState(incomingState)) {
@@ -122,31 +150,45 @@ class WorkOSAuthProvider extends AbstractAuthModuleProvider {
 
     try {
       const workos = await this.getWorkOS()
-      const { profile } = await workos.sso.getProfileAndToken({
+      const { user, authenticationMethod } = await workos.userManagement.authenticateWithCode({
         code,
-        clientID: this.config.clientId,
+        clientId: this.config.clientId,
       })
 
-      const entityId = profile.id
+      if (process.env.WORKOS_REQUIRE_MFA === "true") {
+        const mfaMethods = ["MagicAuth", "GoogleOauth", "MicrosoftOauth", "Sso"]
+        const isMfaVerified =
+          typeof authenticationMethod === "string" && !mfaMethods.includes(authenticationMethod)
+        if (!isMfaVerified) {
+          const mfaFallbackMethods = ["ToTP", "SMS"]
+          const methodStr = authenticationMethod ?? ""
+          const passesMfa = mfaFallbackMethods.some((m) => methodStr.toLowerCase().includes(m.toLowerCase()))
+          if (!passesMfa) {
+            return {
+              success: false,
+              error:
+                "MFA is required for this organization. Please enroll in multi-factor authentication via your WorkOS organization settings.",
+            }
+          }
+        }
+      }
+
       let authIdentity = await authIdentityProviderService
-        .retrieve({ entity_id: entityId })
+        .retrieve({ entity_id: user.id })
         .catch(() => null)
 
       if (!authIdentity) {
         authIdentity = await authIdentityProviderService.create({
-          entity_id: entityId,
+          entity_id: user.id,
           provider_metadata: {
-            email: profile.email,
-            first_name: profile.firstName,
-            last_name: profile.lastName,
+            email: user.email,
+            first_name: user.firstName ?? "",
+            last_name: user.lastName ?? "",
           },
         })
       }
 
-      return {
-        success: true,
-        authIdentity,
-      }
+      return { success: true, authIdentity }
     } catch (error) {
       return {
         success: false,

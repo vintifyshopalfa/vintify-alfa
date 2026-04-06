@@ -3,6 +3,20 @@ import { defineConfig, loadEnv } from '@medusajs/framework/utils'
 
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
+function requireSecret(name: string, defaultForDev?: string): string {
+  const value = process.env[name]
+  if (value) return value
+  if (process.env.NODE_ENV !== 'production' && defaultForDev !== undefined) {
+    console.warn(
+      `[Config] WARNING: ${name} is not set. Using insecure development default. Set this before deploying to production.`
+    )
+    return defaultForDev
+  }
+  throw new Error(
+    `[Config] Required secret '${name}' is not set. Add it to your environment before starting the server.`
+  )
+}
+
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -16,8 +30,8 @@ module.exports = defineConfig({
       // @ts-expect-error: vendorCors is not a valid config
       vendorCors: process.env.VENDOR_CORS!,
       authCors: process.env.AUTH_CORS!,
-      jwtSecret: process.env.JWT_SECRET || 'supersecret',
-      cookieSecret: process.env.COOKIE_SECRET || 'supersecret'
+      jwtSecret: requireSecret('JWT_SECRET', 'dev-jwt-secret-change-before-production'),
+      cookieSecret: requireSecret('COOKIE_SECRET', 'dev-cookie-secret-change-before-production'),
     }
   },
   admin: {

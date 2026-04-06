@@ -25,7 +25,8 @@ export default async function auditAuthSubscriber({
       resource_id: actorId,
       metadata: { event: name },
     })
-  } catch {
+  } catch (error) {
+    console.error("[AuditLog] Failed to write auth audit entry:", (error as Error).message)
   }
 }
 
