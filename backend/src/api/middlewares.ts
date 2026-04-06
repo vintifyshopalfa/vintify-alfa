@@ -111,11 +111,11 @@ export default defineMiddlewares({
       middlewares: [securityHeaders],
     },
     {
-      matcher: "/auth/*",
+      matcher: "/auth/**",
       middlewares: [applyAuthRateLimit],
     },
     {
-      matcher: "/store/auth/*",
+      matcher: "/store/auth/**",
       middlewares: [applyAuthRateLimit],
     },
   ],
