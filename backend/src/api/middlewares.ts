@@ -30,7 +30,7 @@ function securityHeaders(req: MedusaRequest, res: MedusaResponse, next: MedusaNe
   next()
 }
 
-const authRateLimit = rateLimit({
+const authRateLimitMiddleware = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
   standardHeaders: true,
@@ -38,6 +38,12 @@ const authRateLimit = rateLimit({
   message: { message: "Too many authentication attempts, please try again later." },
   skip: () => process.env.NODE_ENV === "test",
 })
+
+function applyAuthRateLimit(req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction): void {
+  // MedusaRequest/MedusaResponse extend express Request/Response so casting is safe
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  authRateLimitMiddleware(req as any, res as any, next as any)
+}
 
 export default defineMiddlewares({
   routes: [
@@ -47,7 +53,7 @@ export default defineMiddlewares({
     },
     {
       matcher: "/auth/*",
-      middlewares: [authRateLimit as unknown as Parameters<typeof defineMiddlewares>[0]["routes"][0]["middlewares"][0]],
+      middlewares: [applyAuthRateLimit],
     },
   ],
 })

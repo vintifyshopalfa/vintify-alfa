@@ -56,7 +56,7 @@ module.exports = defineConfig({
     {
       resolve: './src/modules/audit-log',
     },
-    ...(process.env.WORKOS_CLIENT_ID && process.env.WORKOS_CLIENT_SECRET ? [{
+    {
       resolve: '@medusajs/medusa/auth',
       options: {
         providers: [
@@ -64,7 +64,7 @@ module.exports = defineConfig({
             resolve: '@medusajs/medusa/auth-emailpass',
             id: 'emailpass',
           },
-          {
+          ...(process.env.WORKOS_CLIENT_ID && process.env.WORKOS_CLIENT_SECRET ? [{
             resolve: './src/modules/auth-workos',
             id: 'workos',
             options: {
@@ -72,10 +72,10 @@ module.exports = defineConfig({
               clientSecret: process.env.WORKOS_CLIENT_SECRET,
               redirectUri: process.env.WORKOS_REDIRECT_URI || `${process.env.BACKEND_URL || 'http://localhost:9000'}/auth/workos/callback`,
             }
-          }
+          }] : []),
         ]
       }
-    }] : []),
+    },
     {
       resolve: '@medusajs/medusa/file',
       options: {

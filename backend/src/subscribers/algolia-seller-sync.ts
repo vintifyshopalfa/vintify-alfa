@@ -3,6 +3,25 @@ import { SELLER_MODULE } from "@mercurjs/b2c-core/modules/seller"
 
 type SellerEventData = { id: string }
 
+type SellerRecord = {
+  id: string
+  name: string
+  description?: string
+  email?: string
+  photo?: string
+  city?: string
+  region?: string
+  country_code?: string
+  store_status?: string
+  products?: unknown[]
+  created_at?: string
+  updated_at?: string
+}
+
+interface ISellerService {
+  retrieveSeller(id: string, options?: { relations?: string[] }): Promise<SellerRecord>
+}
+
 export default async function algoliaSellerSyncSubscriber({
   event: { name, data },
   container,
@@ -24,7 +43,7 @@ export default async function algoliaSellerSyncSubscriber({
       return
     }
 
-    const sellerService = container.resolve(SELLER_MODULE)
+    const sellerService = container.resolve<ISellerService>(SELLER_MODULE)
     const seller = await sellerService.retrieveSeller(sellerId, {
       relations: ["members", "products"],
     })

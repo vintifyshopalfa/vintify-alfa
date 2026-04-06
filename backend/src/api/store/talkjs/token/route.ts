@@ -1,19 +1,19 @@
-import { MedusaRequest, MedusaResponse } from "@medusajs/framework"
+import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ICustomerModuleService } from "@medusajs/framework/types"
 import { Modules } from "@medusajs/framework/utils"
 import crypto from "crypto"
 
-export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
+export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const appId = process.env.TALKJS_APP_ID
   const secretKey = process.env.TALKJS_SECRET_KEY
 
   if (!appId || !secretKey) {
-    return res.status(503).json({ error: "TalkJS is not configured on this server" })
+    return res.status(503).json({ message: "TalkJS is not configured on this server" })
   }
 
-  const authCtx = (req as any).auth_context
+  const authCtx = req.auth_context
   if (!authCtx?.actor_id) {
-    return res.status(401).json({ error: "Authentication required" })
+    return res.status(401).json({ message: "Authentication required" })
   }
 
   try {
@@ -43,12 +43,13 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       appId,
       user: {
         id: customer.id,
-        name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim() || customer.email,
+        name: `${customer.first_name ?? ""} ${customer.last_name ?? ""}`.trim() || customer.email,
         email: customer.email,
         photoUrl: null,
       },
     })
   } catch (error) {
-    return res.status(500).json({ error: "Failed to generate TalkJS token" })
+    console.error("[TalkJS] Failed to generate token:", (error as Error).message)
+    return res.status(500).json({ message: "Failed to generate TalkJS token" })
   }
 }
