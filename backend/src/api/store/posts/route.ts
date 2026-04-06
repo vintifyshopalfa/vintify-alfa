@@ -7,7 +7,7 @@ const GetPostsQuerySchema = z.object({
   offset: z.string().regex(/^\d+$/).optional(),
   limit: z.string().regex(/^\d+$/).optional(),
   seller_id: z.string().optional(),
-  sort: z.enum(["recent", "trending"]).optional(),
+  sort: z.enum(["recent", "trending", "mixed"]).optional(),
 })
 
 const CreatePostSchema = z.object({
@@ -26,7 +26,10 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const { seller_id, sort } = parsed.data
 
   const socialService: SocialService = req.scope.resolve(SOCIAL_MODULE)
-  const { posts, count } = await socialService.getFeed(offset, limit, { seller_id, sort })
+  const { posts, count } = await socialService.getFeed(offset, limit, {
+    seller_id,
+    sort: sort as "recent" | "trending" | "mixed" | undefined,
+  })
 
   return res.status(200).json({ posts, count, offset, limit })
 }
@@ -50,10 +53,10 @@ export const POST = async (
 
   const socialService: SocialService = req.scope.resolve(SOCIAL_MODULE)
 
-  const post = await socialService.createPosts({
+  const post = await socialService.createPost({
     seller_id: authCtx.actor_id,
     body: parsed.data.body,
-    images: parsed.data.images as unknown as Record<string, unknown>,
+    images: parsed.data.images,
   })
 
   return res.status(201).json({ post })

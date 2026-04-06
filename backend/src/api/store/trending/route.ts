@@ -2,11 +2,9 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
 import { SOCIAL_MODULE } from "../../../modules/social"
 import SocialService from "../../../modules/social/service"
-import { Modules } from "@medusajs/framework/utils"
 
 const QuerySchema = z.object({
   limit: z.string().regex(/^\d+$/).optional(),
-  locale: z.string().optional(),
 })
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
@@ -19,24 +17,15 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 
   const socialService: SocialService = req.scope.resolve(SOCIAL_MODULE)
 
-  const likes = await socialService.listLikes({ target_type: "product" })
+  const trending = await socialService.getTrendingProductIds(limit)
 
-  const countMap: Record<string, number> = {}
-  for (const like of likes) {
-    countMap[like.target_id] = (countMap[like.target_id] || 0) + 1
-  }
-
-  const sortedProductIds = Object.entries(countMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([id]) => id)
-
-  if (sortedProductIds.length === 0) {
-    return res.status(200).json({ product_ids: [], counts: {} })
+  const counts: Record<string, number> = {}
+  for (const item of trending) {
+    counts[item.target_id] = item.count
   }
 
   return res.status(200).json({
-    product_ids: sortedProductIds,
-    counts: countMap,
+    product_ids: trending.map((t) => t.target_id),
+    counts,
   })
 }

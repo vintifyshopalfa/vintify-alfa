@@ -155,6 +155,37 @@ export const getUserLikedIds = async (): Promise<{ post_ids: string[]; product_i
     .catch(() => ({ post_ids: [], product_ids: [] }))
 }
 
+export const getProductComments = async (
+  productId: string,
+  offset = 0,
+  limit = 20
+): Promise<{ comments: Comment[] }> => {
+  return sdk.client
+    .fetch<{ comments: Comment[] }>(`/store/products/${productId}/comments`, {
+      query: { offset: String(offset), limit: String(limit) },
+      cache: "no-cache",
+    })
+    .catch(() => ({ comments: [] }))
+}
+
+export const createProductComment = async (
+  productId: string,
+  body: string
+): Promise<Comment | null> => {
+  const token = await getAuthToken()
+  if (!token) return null
+
+  return sdk.client
+    .fetch<{ comment: Comment }>(`/store/products/${productId}/comments`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: { body },
+      cache: "no-cache",
+    })
+    .then(({ comment }) => comment)
+    .catch(() => null)
+}
+
 export const getSellerPosts = async (
   sellerId: string,
   offset = 0,

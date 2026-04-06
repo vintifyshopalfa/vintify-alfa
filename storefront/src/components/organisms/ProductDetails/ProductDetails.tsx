@@ -14,6 +14,7 @@ import { SellerProps } from "@/types/seller"
 import { Wishlist } from "@/types/wishlist"
 import { HttpTypes } from "@medusajs/types"
 import { ProductLikeSection } from "@/components/social/ProductLikeSection"
+import { ProductCommentsSection } from "@/components/social/ProductCommentsSection"
 import { Suspense } from "react"
 
 export const ProductDetails = async ({
@@ -50,6 +51,9 @@ export const ProductDetails = async ({
         <ProductLikeSection productId={product.id} />
       </Suspense>
       <ProductDetailsShipping />
+      <Suspense>
+        <ProductCommentsSection productId={product.id} />
+      </Suspense>
       <ProductDetailsSeller
         seller={product?.seller}
         productTitle={product?.title}
