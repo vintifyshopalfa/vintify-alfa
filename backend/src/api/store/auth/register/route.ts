@@ -1,24 +1,28 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import type { IAuthModuleService, ICustomerModuleService } from "@medusajs/framework/types"
 import { Modules } from "@medusajs/framework/utils"
+import { z } from "zod"
 import { hashPassword } from "../../../../modules/security/password"
 
-type RegisterBody = {
-  email?: unknown
-  password?: unknown
-  first_name?: unknown
-  last_name?: unknown
-}
+const RegisterSchema = z.object({
+  email: z.string().email("A valid email address is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  first_name: z.string().max(100).optional(),
+  last_name: z.string().max(100).optional(),
+})
 
-export const POST = async (req: MedusaRequest<RegisterBody>, res: MedusaResponse) => {
-  const { email, password, first_name, last_name } = req.body ?? {}
+type RegisterBody = z.infer<typeof RegisterSchema>
 
-  if (typeof email !== "string" || !email.includes("@")) {
-    return res.status(400).json({ message: "A valid email address is required" })
+export const POST = async (req: MedusaRequest<unknown>, res: MedusaResponse) => {
+  const parsed = RegisterSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: parsed.error.errors.map((e) => ({ field: e.path.join("."), message: e.message })),
+    })
   }
-  if (typeof password !== "string" || password.length < 8) {
-    return res.status(400).json({ message: "Password must be at least 8 characters" })
-  }
+
+  const { email, password, first_name, last_name }: RegisterBody = parsed.data
 
   try {
     const authModule: IAuthModuleService = req.scope.resolve(Modules.AUTH)
@@ -42,8 +46,8 @@ export const POST = async (req: MedusaRequest<RegisterBody>, res: MedusaResponse
     })
 
     const customerData: { email: string; first_name?: string; last_name?: string } = { email }
-    if (typeof first_name === "string") customerData.first_name = first_name
-    if (typeof last_name === "string") customerData.last_name = last_name
+    if (first_name) customerData.first_name = first_name
+    if (last_name) customerData.last_name = last_name
     const customer = await customerModule.createCustomers(customerData)
 
     return res.status(201).json({

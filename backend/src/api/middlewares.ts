@@ -73,5 +73,9 @@ export default defineMiddlewares({
       matcher: "/auth/*",
       middlewares: [applyAuthRateLimit],
     },
+    {
+      matcher: "/store/auth/*",
+      middlewares: [applyAuthRateLimit],
+    },
   ],
 })

@@ -1,6 +1,6 @@
 import { model } from "@medusajs/framework/utils"
 
-const AuditLog = model.define("audit_log", {
+const AuditLog = model.define("audit_logs", {
   id: model.id().primaryKey(),
   actor_id: model.text().nullable(),
   actor_type: model.text().default("system"),

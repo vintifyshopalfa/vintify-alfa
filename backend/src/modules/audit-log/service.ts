@@ -29,6 +29,14 @@ class AuditLogService extends MedusaService({ AuditLog }) {
     ])
   }
 
+  readonly updateAuditLogs = async (..._args: unknown[]): Promise<never> => {
+    throw new Error("audit_logs is append-only: UPDATE is not permitted at the application level")
+  }
+
+  readonly deleteAuditLogs = async (..._args: unknown[]): Promise<never> => {
+    throw new Error("audit_logs is append-only: DELETE is not permitted at the application level")
+  }
+
   private sanitizeMetadata(metadata?: Record<string, unknown>): Record<string, unknown> | undefined {
     if (!metadata) return undefined
     const SENSITIVE_KEYS = ["password", "token", "secret", "card_number", "cvv", "ssn", "cpf"]

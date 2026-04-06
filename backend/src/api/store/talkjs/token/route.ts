@@ -2,8 +2,19 @@ import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/frame
 import { ICustomerModuleService } from "@medusajs/framework/types"
 import { Modules } from "@medusajs/framework/utils"
 import crypto from "crypto"
+import { z } from "zod"
+
+const QuerySchema = z.object({}).strict()
 
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
+  const parsed = QuerySchema.safeParse(req.query ?? {})
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: "Unexpected query parameters",
+      errors: parsed.error.errors.map((e) => ({ field: e.path.join("."), message: e.message })),
+    })
+  }
+
   const appId = process.env.TALKJS_APP_ID
   const secretKey = process.env.TALKJS_SECRET_KEY
 
