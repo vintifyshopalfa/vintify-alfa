@@ -68,6 +68,9 @@ module.exports = defineConfig({
   ],
   modules: [
     {
+      resolve: './src/modules/social',
+    },
+    {
       resolve: './src/modules/audit-log',
     },
     {

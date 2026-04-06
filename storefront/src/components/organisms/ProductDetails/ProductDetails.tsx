@@ -45,7 +45,11 @@ export const ProductDetails = async ({
         attributes={product?.attribute_values || []}
       />
       <ProductDetailsShipping />
-      <ProductDetailsSeller seller={product?.seller} />
+      <ProductDetailsSeller
+        seller={product?.seller}
+        productTitle={product?.title}
+        hasTalkJS={!!process.env.NEXT_PUBLIC_TALKJS_APP_ID}
+      />
       <ProductDetailsFooter
         tags={product?.tags || []}
         posted={product?.created_at}
