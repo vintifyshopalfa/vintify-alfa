@@ -131,3 +131,27 @@ export const toggleProductLike = async (productId: string): Promise<LikeResult |
     })
     .catch(() => null)
 }
+
+export const getTrendingProductIds = async (
+  limit = 12
+): Promise<{ product_ids: string[]; counts: Record<string, number> }> => {
+  return sdk.client
+    .fetch<{ product_ids: string[]; counts: Record<string, number> }>("/store/trending", {
+      query: { limit: String(limit) },
+      cache: "no-cache",
+    })
+    .catch(() => ({ product_ids: [], counts: {} }))
+}
+
+export const getSellerPosts = async (
+  sellerId: string,
+  offset = 0,
+  limit = 20
+): Promise<{ posts: Post[]; count: number }> => {
+  return sdk.client
+    .fetch<{ posts: Post[]; count: number }>("/store/posts", {
+      query: { seller_id: sellerId, offset: String(offset), limit: String(limit) },
+      cache: "no-cache",
+    })
+    .catch(() => ({ posts: [], count: 0 }))
+}

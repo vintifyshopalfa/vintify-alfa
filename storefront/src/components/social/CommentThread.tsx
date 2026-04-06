@@ -6,21 +6,51 @@ import type { Comment } from "@/lib/data/social"
 type CommentThreadProps = {
   postId: string
   initialComments: Comment[]
+  initialTotal: number
   onSubmit: (postId: string, body: string) => Promise<Comment | null>
+  onLoadMore: (postId: string, offset: number) => Promise<{ comments: Comment[] }>
   isAuthenticated: boolean
 }
 
 export function CommentThread({
   postId,
   initialComments,
+  initialTotal,
   onSubmit,
+  onLoadMore,
   isAuthenticated,
 }: CommentThreadProps) {
   const [comments, setComments] = useState<Comment[]>(initialComments)
+  const [total, setTotal] = useState(initialTotal)
   const [open, setOpen] = useState(false)
   const [body, setBody] = useState("")
   const [isPending, startTransition] = useTransition()
+  const [isLoading, setIsLoading] = useState(false)
+  const [fetched, setFetched] = useState(initialComments.length > 0)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  const handleOpen = () => {
+    const next = !open
+    setOpen(next)
+    if (next && !fetched) {
+      setIsLoading(true)
+      onLoadMore(postId, 0)
+        .then(({ comments: fetched_comments }) => {
+          setComments(fetched_comments)
+          setFetched(true)
+        })
+        .finally(() => setIsLoading(false))
+    }
+  }
+
+  const handleLoadMore = () => {
+    setIsLoading(true)
+    onLoadMore(postId, comments.length)
+      .then(({ comments: more }) => {
+        setComments((prev) => [...prev, ...more])
+      })
+      .finally(() => setIsLoading(false))
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,6 +65,7 @@ export function CommentThread({
     }
 
     setComments((prev) => [...prev, optimistic])
+    setTotal((t) => t + 1)
     const submittedBody = body.trim()
     setBody("")
 
@@ -46,6 +77,7 @@ export function CommentThread({
         )
       } else {
         setComments((prev) => prev.filter((c) => c.id !== optimistic.id))
+        setTotal((t) => Math.max(0, t - 1))
       }
     })
   }
@@ -53,18 +85,27 @@ export function CommentThread({
   return (
     <div className="mt-2">
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleOpen}
         className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 transition-colors"
         aria-expanded={open}
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
         </svg>
-        <span className="text-sm font-medium">{comments.length}</span>
+        <span className="text-sm font-medium">{total}</span>
       </button>
 
       {open && (
         <div className="mt-3 space-y-3">
+          {isLoading && comments.length === 0 && (
+            <div className="flex justify-center py-4">
+              <svg className="animate-spin w-5 h-5 text-teal-500" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            </div>
+          )}
+
           {comments.length > 0 && (
             <ul className="space-y-2">
               {comments.map((c) => (
@@ -81,6 +122,15 @@ export function CommentThread({
                 </li>
               ))}
             </ul>
+          )}
+
+          {!isLoading && fetched && comments.length < total && (
+            <button
+              onClick={handleLoadMore}
+              className="text-sm text-teal-600 hover:underline font-medium"
+            >
+              Load more comments ({total - comments.length} remaining)
+            </button>
           )}
 
           {isAuthenticated ? (

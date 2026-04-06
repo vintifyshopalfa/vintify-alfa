@@ -11,6 +11,7 @@ type PostCardProps = {
   isAuthenticated: boolean
   onLike: (postId: string) => Promise<{ liked: boolean; count: number } | null>
   onComment: (postId: string, body: string) => Promise<Comment | null>
+  onLoadComments: (postId: string, offset: number) => Promise<{ comments: Comment[] }>
   initialComments?: Comment[]
 }
 
@@ -19,6 +20,7 @@ export function PostCard({
   isAuthenticated,
   onLike,
   onComment,
+  onLoadComments,
   initialComments = [],
 }: PostCardProps) {
   const [activeImage, setActiveImage] = useState(0)
@@ -94,7 +96,9 @@ export function PostCard({
         <CommentThread
           postId={post.id}
           initialComments={initialComments}
+          initialTotal={post.comments_count}
           onSubmit={onComment}
+          onLoadMore={onLoadComments}
           isAuthenticated={isAuthenticated}
         />
       </div>

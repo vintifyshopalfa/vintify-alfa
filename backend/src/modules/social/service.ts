@@ -83,13 +83,22 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
 
   async getFeed(
     offset: number,
-    limit: number
+    limit: number,
+    options?: { seller_id?: string; sort?: "recent" | "trending" }
   ) {
-    const posts = await this.listPosts(
-      {},
-      { skip: offset, take: limit, order: { created_at: "DESC" } }
-    )
-    const allPosts = await this.listPosts({})
+    const filters: Record<string, unknown> = {}
+    if (options?.seller_id) {
+      filters.seller_id = options.seller_id
+    }
+
+    const orderKey = options?.sort === "trending" ? "likes_count" : "created_at"
+    const orderBy = { [orderKey]: "DESC" } as Record<string, "DESC">
+
+    const [posts, allPosts] = await Promise.all([
+      this.listPosts(filters, { skip: offset, take: limit, order: orderBy }),
+      this.listPosts(filters),
+    ])
+
     return { posts, count: allPosts.length }
   }
 }

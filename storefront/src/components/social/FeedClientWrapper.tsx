@@ -10,6 +10,7 @@ type FeedClientWrapperProps = {
   isAuthenticated: boolean
   onLike: (postId: string) => Promise<{ liked: boolean; count: number } | null>
   onComment: (postId: string, body: string) => Promise<Comment | null>
+  onLoadComments: (postId: string, offset: number) => Promise<{ comments: Comment[] }>
   onLoadMore: (offset: number) => Promise<{ posts: Post[]; count: number }>
 }
 
@@ -19,6 +20,7 @@ export function FeedClientWrapper({
   isAuthenticated,
   onLike,
   onComment,
+  onLoadComments,
   onLoadMore,
 }: FeedClientWrapperProps) {
   const [posts, setPosts] = useState<Post[]>(initialPosts)
@@ -67,6 +69,7 @@ export function FeedClientWrapper({
             isAuthenticated={isAuthenticated}
             onLike={onLike}
             onComment={onComment}
+            onLoadComments={onLoadComments}
           />
         ))}
       </div>

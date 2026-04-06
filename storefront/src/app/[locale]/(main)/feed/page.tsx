@@ -1,5 +1,5 @@
 import { FeedClientWrapper } from "@/components/social/FeedClientWrapper"
-import { getFeed, togglePostLike, createComment } from "@/lib/data/social"
+import { getFeed, togglePostLike, createComment, getPostComments } from "@/lib/data/social"
 import { retrieveCustomer } from "@/lib/data/customer"
 import type { Metadata } from "next"
 import type { Post, Comment } from "@/lib/data/social"
@@ -17,6 +17,11 @@ async function handleLike(postId: string): Promise<{ liked: boolean; count: numb
 async function handleComment(postId: string, body: string): Promise<Comment | null> {
   "use server"
   return createComment(postId, body)
+}
+
+async function handleLoadComments(postId: string, offset: number): Promise<{ comments: Comment[] }> {
+  "use server"
+  return getPostComments(postId, offset, 10)
 }
 
 async function handleLoadMore(offset: number): Promise<{ posts: Post[]; count: number }> {
@@ -51,6 +56,7 @@ export default async function FeedPage() {
           isAuthenticated={!!user}
           onLike={handleLike}
           onComment={handleComment}
+          onLoadComments={handleLoadComments}
           onLoadMore={handleLoadMore}
         />
       </div>
