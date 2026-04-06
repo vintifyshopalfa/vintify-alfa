@@ -1,6 +1,5 @@
 import { defineMiddlewares } from "@medusajs/framework/http"
 import type { MedusaRequest, MedusaResponse, MedusaNextFunction } from "@medusajs/framework/http"
-import rateLimit from "express-rate-limit"
 
 function securityHeaders(req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction) {
   res.setHeader("X-Content-Type-Options", "nosniff")
@@ -30,19 +29,38 @@ function securityHeaders(req: MedusaRequest, res: MedusaResponse, next: MedusaNe
   next()
 }
 
-const authRateLimitMiddleware = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { message: "Too many authentication attempts, please try again later." },
-  skip: () => process.env.NODE_ENV === "test",
-})
+type RateLimitRecord = { count: number; resetAt: number }
+
+const AUTH_RATE_WINDOW_MS = 15 * 60 * 1000
+const AUTH_RATE_MAX = 20
+const authRateLimitStore = new Map<string, RateLimitRecord>()
 
 function applyAuthRateLimit(req: MedusaRequest, res: MedusaResponse, next: MedusaNextFunction): void {
-  // MedusaRequest/MedusaResponse extend express Request/Response so casting is safe
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  authRateLimitMiddleware(req as any, res as any, next as any)
+  if (process.env.NODE_ENV === "test") {
+    next()
+    return
+  }
+
+  const ip = (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim()
+    ?? req.socket?.remoteAddress
+    ?? "unknown"
+
+  const now = Date.now()
+  const record = authRateLimitStore.get(ip)
+
+  if (!record || now >= record.resetAt) {
+    authRateLimitStore.set(ip, { count: 1, resetAt: now + AUTH_RATE_WINDOW_MS })
+    next()
+    return
+  }
+
+  if (record.count >= AUTH_RATE_MAX) {
+    res.status(429).json({ message: "Too many authentication attempts, please try again later." })
+    return
+  }
+
+  record.count++
+  next()
 }
 
 export default defineMiddlewares({

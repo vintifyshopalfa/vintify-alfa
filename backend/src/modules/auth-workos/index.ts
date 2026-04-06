@@ -6,6 +6,8 @@ import type {
 } from "@medusajs/framework/types"
 import crypto from "crypto"
 
+const STATE_TTL_MS = 10 * 60 * 1000
+
 type WorkOSProviderConfig = {
   clientId: string
   clientSecret: string
@@ -26,6 +28,44 @@ interface WorkOSSSO {
 
 interface WorkOSClient {
   sso: WorkOSSSO
+}
+
+function getSigningKey(): string {
+  return process.env.JWT_SECRET || process.env.COOKIE_SECRET || "vintify-workos-state-key"
+}
+
+function createSignedState(): string {
+  const nonce = crypto.randomBytes(16).toString("hex")
+  const expiresAt = (Date.now() + STATE_TTL_MS).toString()
+  const payload = `${nonce}.${expiresAt}`
+  const signature = crypto
+    .createHmac("sha256", getSigningKey())
+    .update(payload)
+    .digest("hex")
+  return `${payload}.${signature}`
+}
+
+function verifySignedState(state: string): boolean {
+  const parts = state.split(".")
+  if (parts.length !== 3) return false
+  const [nonce, expiresAt, signature] = parts
+  const payload = `${nonce}.${expiresAt}`
+
+  const expectedSig = crypto
+    .createHmac("sha256", getSigningKey())
+    .update(payload)
+    .digest("hex")
+
+  const sigValid = crypto.timingSafeEqual(
+    Buffer.from(signature, "hex"),
+    Buffer.from(expectedSig, "hex")
+  )
+  if (!sigValid) return false
+
+  const expiry = parseInt(expiresAt, 10)
+  if (isNaN(expiry) || Date.now() > expiry) return false
+
+  return true
 }
 
 class WorkOSAuthProvider extends AbstractAuthModuleProvider {
@@ -58,10 +98,9 @@ class WorkOSAuthProvider extends AbstractAuthModuleProvider {
     const body = data.body as Record<string, string> | undefined
     const code = body?.code
     const incomingState = body?.state
-    const storedState = (data as Record<string, unknown>).session_state as string | undefined
 
     if (!code) {
-      const state = crypto.randomBytes(16).toString("hex")
+      const state = createSignedState()
       const workos = await this.getWorkOS()
       const authUrl = workos.sso.getAuthorizationURL({
         clientID: this.config.clientId,
@@ -74,8 +113,11 @@ class WorkOSAuthProvider extends AbstractAuthModuleProvider {
       }
     }
 
-    if (storedState && incomingState !== storedState) {
-      return { success: false, error: "OAuth state mismatch — possible CSRF attack" }
+    if (!incomingState || !verifySignedState(incomingState)) {
+      return {
+        success: false,
+        error: "Invalid or expired OAuth state — possible CSRF attack or session expired",
+      }
     }
 
     try {
