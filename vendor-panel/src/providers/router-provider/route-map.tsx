@@ -227,6 +227,14 @@ export const RouteMap: RouteObject[] = [
             ],
           },
           {
+            path: "/meta-cms",
+            errorElement: <ErrorBoundary />,
+            handle: {
+              breadcrumb: () => "Meta & CMS",
+            },
+            lazy: () => import("../../routes/meta-cms"),
+          },
+          {
             path: "/products",
             errorElement: <ErrorBoundary />,
             handle: {

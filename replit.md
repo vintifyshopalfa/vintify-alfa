@@ -73,6 +73,23 @@ This is a monorepo with 4 services:
 - `ALGOLIA_API_KEY` + `ALGOLIA_APP_ID` - Search
 - `MINIO_ENDPOINT` + `MINIO_ACCESS_KEY` + `MINIO_SECRET_KEY` - Object storage
 
+## Features Built
+
+### Admin Panel
+- **14-metric KPI dashboard** at `/dashboard` (home page): GMV, commission, avg order value, total orders, completed/pending orders, active sellers, buyers, new users (7d), active listings, pending requests, reviews, avg rating, commission rate
+- Metrics computed from live Medusa API hooks
+
+### Vendor Panel
+- **Meta & CMS page** at `/meta-cms`: Facebook Pixel integration, Instagram Shopping Catalog, store announcements, and blog posts — all stored as seller metadata
+- Sidebar nav entry: "Meta & CMS" (Newspaper icon), placed between Messages and Requests
+
+### Backend
+- **LGPD audit log module** at `backend/src/modules/audit-log/` — tracks entity mutations with actor and IP
+- **OWASP security headers middleware** at `backend/src/api/middlewares.ts`
+- **Algolia product sync subscriber** at `backend/src/subscribers/algolia-product-sync.ts`
+- **TalkJS messaging endpoint** integrated
+- `@mercurjs` packages **pinned to exact 1.4.3** (no `^`) — critical, see scratchpad
+
 ## Key Configuration Changes for Replit
 
 1. **SSL disabled** in `backend/medusa-config.ts` via `driverOptions`

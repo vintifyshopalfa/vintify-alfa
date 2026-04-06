@@ -13,6 +13,7 @@ import {
   Star,
   ListCheckbox,
   ChatBubbleLeftRight,
+  Newspaper,
 } from "@medusajs/icons"
 import { Divider, Text, clx } from "@medusajs/ui"
 import { Collapsible as RadixCollapsible } from "radix-ui"
@@ -187,6 +188,11 @@ const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
       icon: <ChatBubbleLeftRight />,
       label: `Messages ${unreadMessages?.length && unreadMessages?.length > 0 ? `(${unreadMessages?.length})` : ""}`,
       to: "/messages",
+    },
+    {
+      icon: <Newspaper />,
+      label: "Meta & CMS",
+      to: "/meta-cms",
     },
     {
       icon: <ListCheckbox />,

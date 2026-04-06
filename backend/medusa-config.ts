@@ -54,6 +54,9 @@ module.exports = defineConfig({
   ],
   modules: [
     {
+      resolve: './src/modules/audit-log',
+    },
+    {
       resolve: '@medusajs/medusa/file',
       options: {
         providers: [
@@ -64,7 +67,7 @@ module.exports = defineConfig({
               endPoint: process.env.MINIO_ENDPOINT,
               accessKey: process.env.MINIO_ACCESS_KEY,
               secretKey: process.env.MINIO_SECRET_KEY,
-              bucket: process.env.MINIO_BUCKET // Optional, defaults to 'medusa-media'
+              bucket: process.env.MINIO_BUCKET
             }
           }] : [{
             resolve: '@medusajs/medusa/file-local',
@@ -98,8 +101,7 @@ module.exports = defineConfig({
       options: {
         providers: [
           {
-            resolve:
-              '@mercurjs/payment-stripe-connect/providers/stripe-connect',
+            resolve: '@mercurjs/payment-stripe-connect/providers/stripe-connect',
             id: 'stripe-connect',
             options: {
               apiKey: process.env.STRIPE_SECRET_API_KEY,
