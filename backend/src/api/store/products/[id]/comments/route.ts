@@ -24,12 +24,15 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const limit = Math.min(parseInt(parsed.data.limit || "20", 10), 100)
 
   const socialService: SocialService = req.scope.resolve(SOCIAL_MODULE)
-  const comments = await socialService.listComments(
-    { post_id: id },
-    { skip: offset, take: limit, order: { created_at: "ASC" } }
-  )
+  const [comments, allComments] = await Promise.all([
+    socialService.listComments(
+      { post_id: id, target_type: "product" },
+      { skip: offset, take: limit, order: { created_at: "ASC" } }
+    ),
+    socialService.listComments({ post_id: id, target_type: "product" }),
+  ])
 
-  return res.status(200).json({ comments, offset, limit })
+  return res.status(200).json({ comments, total: allComments.length, offset, limit })
 }
 
 export const POST = async (
@@ -54,6 +57,7 @@ export const POST = async (
   const socialService: SocialService = req.scope.resolve(SOCIAL_MODULE)
   const comment = await socialService.createComments({
     post_id: id,
+    target_type: "product",
     customer_id: authCtx.actor_id,
     body: parsed.data.body,
   })

@@ -6,6 +6,7 @@ import {
   ProductCard,
   ProductListingActiveFilters,
   ProductsPagination,
+  ProductListingHeader,
 } from "@/components/organisms"
 import { client } from "@/lib/client"
 import { Configure, useHits } from "react-instantsearch"
@@ -109,17 +110,35 @@ const ProductsListing = ({
   if (!results?.processingTimeMS) return <ProductListingSkeleton />
 
   const page: number = +(searchParamas.get("page") || 1)
+  const sortBy = searchParamas.get("sortBy") || ""
+
   const filteredProducts = items.filter((pr) =>
     apiProducts?.some((p: any) => p.id === pr.objectID)
   )
 
-  const products = filteredProducts
-    .filter((pr) =>
-      apiProducts?.some(
-        (p: any) => p.id === pr.objectID && filterProductsByCurrencyCode(p)
-      )
+  let sortedProducts = filteredProducts.filter((pr) =>
+    apiProducts?.some(
+      (p: any) => p.id === pr.objectID && filterProductsByCurrencyCode(p)
     )
-    .slice((page - 1) * PRODUCT_LIMIT, page * PRODUCT_LIMIT)
+  )
+
+  if (sortBy === "created_at") {
+    sortedProducts = [...sortedProducts].sort((a, b) => {
+      const aDate = typeof a.created_at === "string" ? new Date(a.created_at).getTime() : 0
+      const bDate = typeof b.created_at === "string" ? new Date(b.created_at).getTime() : 0
+      return bDate - aDate
+    })
+  } else if (sortBy === "price_asc" || sortBy === "price_desc") {
+    sortedProducts = [...sortedProducts].sort((a, b) => {
+      const aProduct = apiProducts?.find((p: any) => p.id === a.objectID)
+      const bProduct = apiProducts?.find((p: any) => p.id === b.objectID)
+      const aPrice = aProduct?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
+      const bPrice = bProduct?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
+      return sortBy === "price_asc" ? aPrice - bPrice : bPrice - aPrice
+    })
+  }
+
+  const products = sortedProducts.slice((page - 1) * PRODUCT_LIMIT, page * PRODUCT_LIMIT)
 
   const count = filteredProducts?.length || 0
   const pages = Math.ceil(count / PRODUCT_LIMIT) || 1
@@ -163,9 +182,7 @@ const ProductsListing = ({
 
   return (
     <div className="min-h-[70vh]">
-      <div className="flex justify-between w-full items-center">
-        <div className="my-4 label-md">{`${count} listings`}</div>
-      </div>
+      <ProductListingHeader total={count} />
       <div className="hidden md:block">
         <ProductListingActiveFilters />
       </div>

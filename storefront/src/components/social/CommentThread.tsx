@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition, useRef } from "react"
+import { usePathname } from "next/navigation"
 import type { Comment } from "@/lib/data/social"
 
 type CommentThreadProps = {
@@ -28,6 +29,9 @@ export function CommentThread({
   const [isLoading, setIsLoading] = useState(false)
   const [fetched, setFetched] = useState(initialComments.length > 0)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const pathname = usePathname()
+  const locale = pathname.split("/")[1] || ""
+  const loginHref = locale ? `/${locale}/user` : "/user"
 
   const handleOpen = () => {
     const next = !open
@@ -155,7 +159,7 @@ export function CommentThread({
             </form>
           ) : (
             <p className="text-sm text-gray-500">
-              <a href="/user" className="text-teal-600 font-medium hover:underline">Sign in</a> to comment
+              <a href={loginHref} className="text-teal-600 font-medium hover:underline">Sign in</a> to comment
             </p>
           )}
         </div>

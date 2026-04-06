@@ -159,13 +159,13 @@ export const getProductComments = async (
   productId: string,
   offset = 0,
   limit = 20
-): Promise<{ comments: Comment[] }> => {
+): Promise<{ comments: Comment[]; total: number }> => {
   return sdk.client
-    .fetch<{ comments: Comment[] }>(`/store/products/${productId}/comments`, {
+    .fetch<{ comments: Comment[]; total: number }>(`/store/products/${productId}/comments`, {
       query: { offset: String(offset), limit: String(limit) },
       cache: "no-cache",
     })
-    .catch(() => ({ comments: [] }))
+    .catch(() => ({ comments: [], total: 0 }))
 }
 
 export const createProductComment = async (

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 
 type LikeButtonProps = {
   initialLiked: boolean
@@ -22,12 +22,15 @@ export function LikeButton({
   const [count, setCount] = useState(initialCount)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const pathname = usePathname()
+  const locale = pathname.split("/")[1] || ""
+  const loginHref = locale ? `/${locale}/user` : "/user"
 
   const handleClick = () => {
     if (isPending) return
 
     if (!isAuthenticated) {
-      router.push("/user")
+      router.push(loginHref)
       return
     }
 

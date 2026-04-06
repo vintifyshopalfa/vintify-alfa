@@ -96,7 +96,7 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
     customerId: string,
     body: string
   ) {
-    const comment = await this.createComments({ post_id: targetId, customer_id: customerId, body })
+    const comment = await this.createComments({ post_id: targetId, target_type: "post", customer_id: customerId, body })
 
     const posts = await this.listPosts({ id: targetId })
     if (posts.length > 0) {

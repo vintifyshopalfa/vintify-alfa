@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { usePathname } from "next/navigation"
 import { Popup, useSession } from "@talkjs/react"
 
 type ContactSellerButtonProps = {
@@ -12,11 +13,14 @@ type ContactSellerButtonProps = {
 export function ContactSellerButton({ sellerId, sellerName, productTitle }: ContactSellerButtonProps) {
   const [popupOpen, setPopupOpen] = useState(false)
   const session = useSession()
+  const pathname = usePathname()
+  const locale = pathname.split("/")[1] || ""
+  const loginHref = locale ? `/${locale}/user` : "/user"
 
   if (!session) {
     return (
       <a
-        href="/user"
+        href={loginHref}
         className="w-full flex items-center justify-center gap-2 border border-gray-300 text-gray-700 font-medium rounded-xl py-3 px-6 hover:bg-gray-50 transition-colors text-sm"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden>

@@ -51,9 +51,7 @@ export const ProductDetails = async ({
         <ProductLikeSection productId={product.id} />
       </Suspense>
       <ProductDetailsShipping />
-      <Suspense>
-        <ProductCommentsSection productId={product.id} />
-      </Suspense>
+      <ProductCommentsSection productId={product.id} isAuthenticated={!!user} />
       <ProductDetailsSeller
         seller={product?.seller}
         productTitle={product?.title}
