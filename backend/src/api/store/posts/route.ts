@@ -50,11 +50,10 @@ export const POST = async (
 
   const socialService: SocialService = req.scope.resolve(SOCIAL_MODULE)
 
-  const imageJson: Record<string, unknown> = { urls: parsed.data.images }
   const post = await socialService.createPosts({
     seller_id: authCtx.actor_id,
     body: parsed.data.body,
-    images: imageJson,
+    images: parsed.data.images as unknown as Record<string, unknown>,
   })
 
   return res.status(201).json({ post })

@@ -1,0 +1,74 @@
+"use client"
+
+import { useState, useEffect } from "react"
+
+type FollowButtonProps = {
+  sellerId: string
+  sellerName?: string
+}
+
+const STORAGE_KEY = "vintify_following"
+
+function getFollowedSellers(): Set<string> {
+  if (typeof window === "undefined") return new Set()
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return new Set(stored ? JSON.parse(stored) : [])
+  } catch {
+    return new Set()
+  }
+}
+
+function saveFollowedSellers(ids: Set<string>): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(ids)))
+  } catch {
+  }
+}
+
+export function FollowButton({ sellerId, sellerName }: FollowButtonProps) {
+  const [following, setFollowing] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    setFollowing(getFollowedSellers().has(sellerId))
+  }, [sellerId])
+
+  const handleToggle = () => {
+    const ids = getFollowedSellers()
+    if (following) {
+      ids.delete(sellerId)
+    } else {
+      ids.add(sellerId)
+    }
+    saveFollowedSellers(ids)
+    setFollowing(!following)
+  }
+
+  if (!mounted) {
+    return (
+      <button
+        className="px-6 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-500 cursor-wait"
+        disabled
+      >
+        Follow
+      </button>
+    )
+  }
+
+  return (
+    <button
+      onClick={handleToggle}
+      className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+        following
+          ? "border border-gray-300 text-gray-700 hover:bg-gray-50"
+          : "text-white hover:opacity-90"
+      }`}
+      style={following ? {} : { backgroundColor: "#09B1BA" }}
+      aria-pressed={following}
+    >
+      {following ? "Following" : `Follow${sellerName ? ` ${sellerName}` : ""}`}
+    </button>
+  )
+}

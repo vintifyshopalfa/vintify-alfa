@@ -1,4 +1,4 @@
-import { getSellerPosts, togglePostLike, createComment, getPostComments } from "@/lib/data/social"
+import { getSellerPosts, togglePostLike, createComment, getPostComments, getUserLikedIds } from "@/lib/data/social"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { FeedClientWrapper } from "@/components/social/FeedClientWrapper"
 import type { Post, Comment } from "@/lib/data/social"
@@ -8,6 +8,8 @@ export const SellerPostsTab = async ({ seller_id }: { seller_id: string }) => {
     getSellerPosts(seller_id, 0, 10),
     retrieveCustomer().catch(() => null),
   ])
+
+  const likedPostIds = user ? (await getUserLikedIds()).post_ids : []
 
   async function handleLike(postId: string): Promise<{ liked: boolean; count: number } | null> {
     "use server"
@@ -41,6 +43,7 @@ export const SellerPostsTab = async ({ seller_id }: { seller_id: string }) => {
           initialPosts={posts}
           initialCount={count}
           isAuthenticated={!!user}
+          likedPostIds={likedPostIds}
           onLike={handleLike}
           onComment={handleComment}
           onLoadComments={handleLoadComments}

@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 
 type LikeButtonProps = {
   initialLiked: boolean
   initialCount: number
   onToggle: () => Promise<{ liked: boolean; count: number } | null>
-  requiresAuth?: boolean
+  isAuthenticated?: boolean
   size?: "sm" | "md"
 }
 
@@ -14,15 +15,21 @@ export function LikeButton({
   initialLiked,
   initialCount,
   onToggle,
-  requiresAuth = true,
+  isAuthenticated = false,
   size = "md",
 }: LikeButtonProps) {
   const [liked, setLiked] = useState(initialLiked)
   const [count, setCount] = useState(initialCount)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   const handleClick = () => {
     if (isPending) return
+
+    if (!isAuthenticated) {
+      router.push("/user")
+      return
+    }
 
     const prevLiked = liked
     const prevCount = count
@@ -49,6 +56,7 @@ export function LikeButton({
       onClick={handleClick}
       disabled={isPending}
       aria-label={liked ? "Unlike" : "Like"}
+      title={!isAuthenticated ? "Sign in to like" : undefined}
       className={`flex items-center gap-1.5 transition-all duration-150 ${
         liked
           ? "text-red-500"

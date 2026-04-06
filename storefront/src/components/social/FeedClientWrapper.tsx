@@ -8,6 +8,7 @@ type FeedClientWrapperProps = {
   initialPosts: Post[]
   initialCount: number
   isAuthenticated: boolean
+  likedPostIds?: string[]
   onLike: (postId: string) => Promise<{ liked: boolean; count: number } | null>
   onComment: (postId: string, body: string) => Promise<Comment | null>
   onLoadComments: (postId: string, offset: number) => Promise<{ comments: Comment[] }>
@@ -18,6 +19,7 @@ export function FeedClientWrapper({
   initialPosts,
   initialCount,
   isAuthenticated,
+  likedPostIds = [],
   onLike,
   onComment,
   onLoadComments,
@@ -27,6 +29,8 @@ export function FeedClientWrapper({
   const [count, setCount] = useState(initialCount)
   const [isPending, startTransition] = useTransition()
   const loaderRef = useRef<HTMLDivElement>(null)
+
+  const likedSet = new Set(likedPostIds)
 
   const loadMore = useCallback(() => {
     if (isPending || posts.length >= count) return
@@ -67,6 +71,7 @@ export function FeedClientWrapper({
             key={post.id}
             post={post}
             isAuthenticated={isAuthenticated}
+            likedPostIds={likedSet}
             onLike={onLike}
             onComment={onComment}
             onLoadComments={onLoadComments}

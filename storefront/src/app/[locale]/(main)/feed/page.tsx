@@ -1,5 +1,5 @@
 import { FeedClientWrapper } from "@/components/social/FeedClientWrapper"
-import { getFeed, togglePostLike, createComment, getPostComments } from "@/lib/data/social"
+import { getFeed, togglePostLike, createComment, getPostComments, getUserLikedIds } from "@/lib/data/social"
 import { retrieveCustomer } from "@/lib/data/customer"
 import type { Metadata } from "next"
 import type { Post, Comment } from "@/lib/data/social"
@@ -35,6 +35,8 @@ export default async function FeedPage() {
     retrieveCustomer().catch(() => null),
   ])
 
+  const likedPostIds = user ? (await getUserLikedIds()).post_ids : []
+
   return (
     <main className="container py-8">
       <div className="max-w-xl mx-auto">
@@ -54,6 +56,7 @@ export default async function FeedPage() {
           initialPosts={posts}
           initialCount={count}
           isAuthenticated={!!user}
+          likedPostIds={likedPostIds}
           onLike={handleLike}
           onComment={handleComment}
           onLoadComments={handleLoadComments}

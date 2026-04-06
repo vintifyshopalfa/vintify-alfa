@@ -9,6 +9,7 @@ import type { Post, Comment } from "@/lib/data/social"
 type PostCardProps = {
   post: Post
   isAuthenticated: boolean
+  likedPostIds?: Set<string>
   onLike: (postId: string) => Promise<{ liked: boolean; count: number } | null>
   onComment: (postId: string, body: string) => Promise<Comment | null>
   onLoadComments: (postId: string, offset: number) => Promise<{ comments: Comment[] }>
@@ -18,6 +19,7 @@ type PostCardProps = {
 export function PostCard({
   post,
   isAuthenticated,
+  likedPostIds,
   onLike,
   onComment,
   onLoadComments,
@@ -87,10 +89,10 @@ export function PostCard({
 
       <div className="px-4 py-3 flex items-center gap-4 border-t border-gray-50">
         <LikeButton
-          initialLiked={false}
+          initialLiked={likedPostIds?.has(post.id) ?? false}
           initialCount={post.likes_count}
           onToggle={() => onLike(post.id)}
-          requiresAuth={isAuthenticated}
+          isAuthenticated={isAuthenticated}
           size="sm"
         />
         <CommentThread

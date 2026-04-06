@@ -143,6 +143,18 @@ export const getTrendingProductIds = async (
     .catch(() => ({ product_ids: [], counts: {} }))
 }
 
+export const getUserLikedIds = async (): Promise<{ post_ids: string[]; product_ids: string[] }> => {
+  const token = await getAuthToken()
+  if (!token) return { post_ids: [], product_ids: [] }
+
+  return sdk.client
+    .fetch<{ post_ids: string[]; product_ids: string[] }>("/store/likes", {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-cache",
+    })
+    .catch(() => ({ post_ids: [], product_ids: [] }))
+}
+
 export const getSellerPosts = async (
   sellerId: string,
   offset = 0,

@@ -18,16 +18,16 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
     if (existing.length > 0) {
       await this.deleteLikes(existing[0].id)
 
+      const remaining = await this.listLikes({ target_type: targetType, target_id: targetId })
+      const remainingCount = remaining.length
+
       if (targetType === "post") {
         const posts = await this.listPosts({ id: targetId })
         if (posts.length > 0) {
-          const post = posts[0]
-          const newCount = Math.max(0, (post.likes_count || 0) - 1)
-          await this.updatePosts({ id: targetId }, { likes_count: newCount })
-          return { liked: false, count: newCount }
+          await this.updatePosts({ id: targetId }, { likes_count: remainingCount })
         }
       }
-      return { liked: false, count: 0 }
+      return { liked: false, count: remainingCount }
     }
 
     await this.createLikes({
