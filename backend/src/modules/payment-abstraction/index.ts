@@ -1,4 +1,4 @@
-export { IPaymentProvider } from "./types"
+export type { IPaymentProvider } from "./types"
 export type {
   CreatePaymentIntentInput,
   CapturePaymentInput,

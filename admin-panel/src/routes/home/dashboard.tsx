@@ -16,12 +16,19 @@ import {
   Envelope,
 } from "@medusajs/icons"
 import { Container, Heading, Text, Badge } from "@medusajs/ui"
+import { HttpTypes } from "@medusajs/types"
 import { sdk } from "@lib/client"
 import { useOrders } from "@hooks/api/orders"
 import { useCustomers } from "@hooks/api/customers"
 import { useSellers } from "@hooks/api/sellers"
 import { useVendorRequests } from "@hooks/api/requests"
 import { useDefaultCommissionRule } from "@hooks/api/commission"
+
+type ReviewsMetrics = {
+  reviews: { id: string }[]
+  count?: number
+  avg_rating?: number
+}
 
 function formatCurrency(amount: number, currency = "USD") {
   return new Intl.NumberFormat("en-US", {
@@ -92,15 +99,15 @@ export const Dashboard = () => {
   const oneWeekAgo = sevenDaysAgo()
 
   const { orders: allOrders, count: totalOrders, isPending: ordersLoading } = useOrders({ limit: 50, offset: 0 })
-  const { count: pendingCount } = useOrders({ status: ["pending"] as any, limit: 1 })
-  const { count: completedCount } = useOrders({ status: ["completed"] as any, limit: 1 })
-  const { count: newOrdersCount } = useOrders({ created_at: { gte: oneWeekAgo } as any, limit: 1 })
+  const { count: pendingCount } = useOrders({ status: ["pending"] as HttpTypes.AdminOrderFilters["status"], limit: 1 })
+  const { count: completedCount } = useOrders({ status: ["completed"] as HttpTypes.AdminOrderFilters["status"], limit: 1 })
+  const { count: newOrdersCount } = useOrders({ created_at: { gte: oneWeekAgo }, limit: 1 })
 
   const { count: totalCustomers, isPending: customersLoading } = useCustomers({ limit: 1 })
-  const { count: newCustomersCount } = useCustomers({ created_at: { gte: oneWeekAgo } as any, limit: 1 } as any)
+  const { count: newCustomersCount } = useCustomers({ created_at: { gte: oneWeekAgo }, limit: 1 })
 
   const { count: totalSellers, isPending: sellersLoading } = useSellers({ limit: 1 })
-  const { count: newSellersCount } = useSellers({ created_at: { gte: oneWeekAgo } as any, limit: 1 })
+  const { count: newSellersCount } = useSellers({ created_at_from: oneWeekAgo, limit: 1 })
 
   const { count: pendingRequests } = useVendorRequests({ status: "pending", limit: 1 })
 
@@ -113,12 +120,15 @@ export const Dashboard = () => {
 
   const { data: reviewsData } = useQuery({
     queryKey: ["reviews-metrics"],
-    queryFn: () => sdk.client.fetch<{ reviews: any[]; count?: number; avg_rating?: number }>("/admin/reviews", { method: "GET", query: { limit: 1 } }).catch(() => ({ reviews: [], count: 0 })),
+    queryFn: () => sdk.client.fetch<ReviewsMetrics>("/admin/reviews", { method: "GET", query: { limit: 1 } }).catch(() => ({ reviews: [], count: 0 })),
   })
 
-  const totalRevenue = (allOrders || []).reduce((sum: number, o: any) => sum + (o.total || 0), 0)
-  const avgOrderValue = totalOrders && totalOrders > 0 ? totalRevenue / Math.min(totalOrders, (allOrders || []).length) : 0
-  const commissionRate = (defaultCommission as any)?.percentage ?? 10
+  const totalRevenue = (allOrders ?? []).reduce(
+    (sum: number, o: HttpTypes.AdminOrder) => sum + (o.total ?? 0),
+    0
+  )
+  const avgOrderValue = totalOrders && totalOrders > 0 ? totalRevenue / Math.min(totalOrders, (allOrders ?? []).length) : 0
+  const commissionRate = defaultCommission?.percentage_rate ?? 10
   const commissionEarned = totalRevenue * (commissionRate / 100)
 
   const metrics: Array<{
@@ -219,7 +229,7 @@ export const Dashboard = () => {
     },
     {
       title: "Total Reviews",
-      value: (reviewsData as any)?.count?.toLocaleString() ?? "0",
+      value: reviewsData?.count?.toLocaleString() ?? "0",
       subtitle: "Across all products",
       icon: Star,
       color: "yellow",
@@ -227,7 +237,7 @@ export const Dashboard = () => {
     },
     {
       title: "Avg Product Rating",
-      value: (reviewsData as any)?.avg_rating ? `${Number((reviewsData as any).avg_rating).toFixed(1)} / 5` : "N/A",
+      value: reviewsData?.avg_rating ? `${Number(reviewsData.avg_rating).toFixed(1)} / 5` : "N/A",
       subtitle: "Customer satisfaction",
       icon: Star,
       color: "yellow",

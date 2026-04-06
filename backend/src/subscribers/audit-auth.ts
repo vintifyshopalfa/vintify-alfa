@@ -30,5 +30,10 @@ export default async function auditAuthSubscriber({
 }
 
 export const config: SubscriberConfig = {
-  event: ["auth.token_generated", "auth.password_reset"],
+  event: [
+    "auth.token_generated",
+    "auth.token_revoked",
+    "auth.password_reset",
+    "auth.password_reset_requested",
+  ],
 }

@@ -1,4 +1,5 @@
-import {
+import type Stripe from "stripe"
+import type {
   IPaymentProvider,
   CreatePaymentIntentInput,
   CapturePaymentInput,
@@ -7,8 +8,10 @@ import {
   PaymentResult,
 } from "./types"
 
+const STRIPE_API_VERSION = "2023-10-16" as Stripe.LatestApiVersion
+
 export class StripePaymentProvider implements IPaymentProvider {
-  private stripe: any
+  private stripeClient: Stripe | null = null
   private apiKey: string
 
   constructor(apiKey?: string) {
@@ -18,12 +21,12 @@ export class StripePaymentProvider implements IPaymentProvider {
     }
   }
 
-  private async getStripe() {
-    if (!this.stripe) {
-      const Stripe = (await import("stripe")).default
-      this.stripe = new Stripe(this.apiKey, { apiVersion: "2023-10-16" as any })
+  private async getStripe(): Promise<Stripe> {
+    if (!this.stripeClient) {
+      const StripeClass = (await import("stripe")).default
+      this.stripeClient = new StripeClass(this.apiKey, { apiVersion: STRIPE_API_VERSION })
     }
-    return this.stripe
+    return this.stripeClient
   }
 
   async createPaymentIntent(input: CreatePaymentIntentInput): Promise<PaymentResult> {
@@ -47,12 +50,16 @@ export class StripePaymentProvider implements IPaymentProvider {
 
   async refundPayment(input: RefundPaymentInput): Promise<PaymentResult> {
     const stripe = await this.getStripe()
+    const validReasons: Stripe.RefundCreateParams.Reason[] = ["duplicate", "fraudulent", "requested_by_customer"]
+    const reason = validReasons.includes(input.reason as Stripe.RefundCreateParams.Reason)
+      ? (input.reason as Stripe.RefundCreateParams.Reason)
+      : undefined
     const refund = await stripe.refunds.create({
       payment_intent: input.paymentIntentId,
       amount: input.amount,
-      reason: input.reason as any,
+      reason,
     })
-    return { id: refund.id, status: refund.status, amount: refund.amount }
+    return { id: refund.id, status: refund.status ?? "pending", amount: refund.amount ?? input.amount }
   }
 
   async createPayout(input: CreatePayoutInput): Promise<PaymentResult> {

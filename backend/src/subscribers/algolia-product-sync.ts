@@ -37,9 +37,9 @@ export default async function algoliaProductSyncSubscriber({
       handle: product.handle,
       status: product.status,
       thumbnail: product.thumbnail,
-      images: product.images?.map((i: any) => i.url) || [],
-      categories: product.categories?.map((c: any) => c.name) || [],
-      tags: product.tags?.map((t: any) => t.value) || [],
+      images: product.images?.map((i: { url: string }) => i.url) ?? [],
+      categories: product.categories?.map((c: { name: string }) => c.name) ?? [],
+      tags: product.tags?.map((t: { value: string }) => t.value) ?? [],
       created_at: product.created_at,
       updated_at: product.updated_at,
     }
@@ -47,7 +47,7 @@ export default async function algoliaProductSyncSubscriber({
     await client.saveObject({ indexName, body: record })
     console.log(`[Algolia] Synced product ${productId} (${name})`)
   } catch (error) {
-    console.error(`[Algolia] Failed to sync product ${productId}:`, error?.message)
+    console.error(`[Algolia] Failed to sync product ${productId}: ${(error as Error).message}`)
   }
 }
 
