@@ -3,7 +3,15 @@ import Post from "./models/post"
 import Like from "./models/like"
 import Comment from "./models/comment"
 
-export type PostWithImages = {
+export type PostData = {
+  seller_id: string
+  body: string
+  images: string[]
+  likes_count?: number
+  comments_count?: number
+}
+
+export type PostRecord = {
   id: string
   seller_id: string
   body: string
@@ -14,25 +22,39 @@ export type PostWithImages = {
   updated_at: Date
 }
 
-function deserializePost(raw: Record<string, unknown>): PostWithImages {
-  const imagesRaw = raw.images
-  let images: string[] = []
-  if (Array.isArray(imagesRaw)) {
-    images = imagesRaw as string[]
-  } else if (typeof imagesRaw === "string") {
-    try { images = JSON.parse(imagesRaw) } catch { images = [] }
+function parseImages(raw: string): string[] {
+  if (typeof raw !== "string") return []
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
   }
-  return { ...raw, images } as unknown as PostWithImages
+}
+
+function toPostRecord(raw: Record<string, unknown>): PostRecord {
+  return {
+    id: raw.id as string,
+    seller_id: raw.seller_id as string,
+    body: raw.body as string,
+    images: parseImages(raw.images as string),
+    likes_count: (raw.likes_count as number) ?? 0,
+    comments_count: (raw.comments_count as number) ?? 0,
+    created_at: raw.created_at as Date,
+    updated_at: raw.updated_at as Date,
+  }
 }
 
 class SocialService extends MedusaService({ Post, Like, Comment }) {
-  async createPost(data: { seller_id: string; body: string; images: string[] }): Promise<PostWithImages> {
+  async createPost(data: PostData): Promise<PostRecord> {
     const created = await this.createPosts({
       seller_id: data.seller_id,
       body: data.body,
-      images: data.images as unknown as Record<string, unknown>,
+      images: JSON.stringify(data.images),
+      likes_count: data.likes_count ?? 0,
+      comments_count: data.comments_count ?? 0,
     })
-    return deserializePost(created as unknown as Record<string, unknown>)
+    return toPostRecord(created as unknown as Record<string, unknown>)
   }
 
   async toggleLike(
@@ -48,7 +70,6 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
 
     if (existing.length > 0) {
       await this.deleteLikes(existing[0].id)
-
       const remaining = await this.listLikes({ target_type: targetType, target_id: targetId })
       const remainingCount = remaining.length
 
@@ -61,17 +82,13 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
       return { liked: false, count: remainingCount }
     }
 
-    await this.createLikes({
-      customer_id: customerId,
-      target_type: targetType,
-      target_id: targetId,
-    })
+    await this.createLikes({ customer_id: customerId, target_type: targetType, target_id: targetId })
 
     if (targetType === "post") {
       const posts = await this.listPosts({ id: targetId })
       if (posts.length > 0) {
         const post = posts[0]
-        const newCount = (post.likes_count || 0) + 1
+        const newCount = ((post.likes_count as number) || 0) + 1
         await this.updatePosts({ id: targetId }, { likes_count: newCount })
         return { liked: true, count: newCount }
       }
@@ -79,6 +96,23 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
 
     const allLikes = await this.listLikes({ target_type: targetType, target_id: targetId })
     return { liked: true, count: allLikes.length }
+  }
+
+  async addComment(targetId: string, customerId: string, body: string) {
+    const comment = await this.createComments({
+      post_id: targetId,
+      target_type: "post",
+      customer_id: customerId,
+      body,
+    })
+
+    const posts = await this.listPosts({ id: targetId })
+    if (posts.length > 0) {
+      const post = posts[0]
+      await this.updatePosts({ id: targetId }, { comments_count: ((post.comments_count as number) || 0) + 1 })
+    }
+
+    return comment
   }
 
   async getLikeCount(
@@ -91,31 +125,16 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
     return { count: likes.length, liked }
   }
 
-  async addComment(
-    targetId: string,
-    customerId: string,
-    body: string
-  ) {
-    const comment = await this.createComments({ post_id: targetId, target_type: "post", customer_id: customerId, body })
-
-    const posts = await this.listPosts({ id: targetId })
-    if (posts.length > 0) {
-      const post = posts[0]
-      await this.updatePosts({ id: targetId }, { comments_count: (post.comments_count || 0) + 1 })
-    }
-
-    return comment
-  }
-
   async getTrendingProductIds(limit: number): Promise<Array<{ target_id: string; count: number }>> {
     const allProductLikes = await this.listLikes(
       { target_type: "product" },
       { take: 5000, order: { id: "DESC" } }
     )
 
-    const countMap: Map<string, number> = new Map()
+    const countMap = new Map<string, number>()
     for (const like of allProductLikes) {
-      countMap.set(like.target_id, (countMap.get(like.target_id) || 0) + 1)
+      const id = like.target_id as string
+      countMap.set(id, (countMap.get(id) ?? 0) + 1)
     }
 
     return Array.from(countMap.entries())
@@ -127,58 +146,67 @@ class SocialService extends MedusaService({ Post, Like, Comment }) {
   async getFeed(
     offset: number,
     limit: number,
-    options?: { seller_id?: string; sort?: "recent" | "trending" | "mixed" }
-  ): Promise<{ posts: PostWithImages[]; count: number }> {
-    const filters: Record<string, unknown> = {}
-    if (options?.seller_id) {
-      filters.seller_id = options.seller_id
+    options?: {
+      seller_id?: string
+      sort?: "recent" | "trending" | "mixed"
+      followed_seller_ids?: string[]
     }
-
-    let rawPosts: unknown[]
-    let totalCount: number
+  ): Promise<{ posts: PostRecord[]; count: number }> {
+    const baseFilter: Record<string, unknown> = {}
+    if (options?.seller_id) {
+      baseFilter.seller_id = options.seller_id
+    }
 
     if (options?.sort === "mixed" || (!options?.sort && !options?.seller_id)) {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      const followedIds = options?.followed_seller_ids ?? []
 
-      const [recentPosts, popularPosts] = await Promise.all([
+      const [recentRaw, popularRaw] = await Promise.all([
         this.listPosts(
-          { ...filters, created_at: { $gte: sevenDaysAgo } as unknown as string },
-          { skip: 0, take: limit * 2, order: { created_at: "DESC" } }
+          { ...baseFilter, created_at: { $gte: sevenDaysAgo } as unknown as string },
+          { skip: 0, take: limit * 3, order: { created_at: "DESC" } }
         ),
-        this.listPosts(
-          filters,
-          { skip: 0, take: limit, order: { likes_count: "DESC" } }
-        ),
+        this.listPosts(baseFilter, { skip: 0, take: limit * 2, order: { likes_count: "DESC" } }),
       ])
 
       const seen = new Set<string>()
-      const merged: unknown[] = []
-      for (const p of [...recentPosts, ...popularPosts]) {
-        const post = p as Record<string, unknown>
-        if (!seen.has(post.id as string)) {
-          seen.add(post.id as string)
-          merged.push(p)
+      const scored: Array<{ raw: Record<string, unknown>; score: number }> = []
+
+      const allRaw = [...recentRaw, ...popularRaw] as Array<Record<string, unknown>>
+      for (const raw of allRaw) {
+        const id = raw.id as string
+        if (seen.has(id)) continue
+        seen.add(id)
+
+        let score = (raw.likes_count as number) ?? 0
+        const ageMs = Date.now() - new Date(raw.created_at as Date).getTime()
+        const ageHours = ageMs / (1000 * 60 * 60)
+        score += Math.max(0, 72 - ageHours)
+        if (followedIds.includes(raw.seller_id as string)) {
+          score += 100
         }
+        scored.push({ raw, score })
       }
 
-      const paginated = merged.slice(offset, offset + limit)
-      const countRaw = await this.listPosts(filters)
-      rawPosts = paginated
-      totalCount = countRaw.length
-    } else {
-      const orderKey = options?.sort === "trending" ? "likes_count" : "created_at"
-      const orderBy = { [orderKey]: "DESC" } as Record<string, "DESC">
+      scored.sort((a, b) => b.score - a.score)
 
-      const [posts, allPosts] = await Promise.all([
-        this.listPosts(filters, { skip: offset, take: limit, order: orderBy }),
-        this.listPosts(filters),
-      ])
-      rawPosts = posts
-      totalCount = allPosts.length
+      const allCount = await this.listPosts(baseFilter).then((r) => r.length)
+      const paginated = scored.slice(offset, offset + limit).map((s) => toPostRecord(s.raw))
+      return { posts: paginated, count: allCount }
     }
 
-    const posts = (rawPosts as Array<Record<string, unknown>>).map(deserializePost)
-    return { posts, count: totalCount }
+    const orderKey = options?.sort === "trending" ? "likes_count" : "created_at"
+    const orderBy = { [orderKey]: "DESC" } as Record<string, "DESC">
+
+    const [postsRaw, allRaw] = await Promise.all([
+      this.listPosts(baseFilter, { skip: offset, take: limit, order: orderBy }),
+      this.listPosts(baseFilter),
+    ])
+
+    return {
+      posts: (postsRaw as Array<Record<string, unknown>>).map(toPostRecord),
+      count: allRaw.length,
+    }
   }
 }
 

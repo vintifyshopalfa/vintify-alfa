@@ -122,6 +122,14 @@ const ProductsListing = ({
     )
   )
 
+  type ApiProductLookup = { id: string; variants?: Array<{ calculated_price?: { calculated_amount?: number } }> }
+  const productById = new Map<string, ApiProductLookup>()
+  if (apiProducts) {
+    for (const p of apiProducts as ApiProductLookup[]) {
+      productById.set(p.id, p)
+    }
+  }
+
   if (sortBy === "created_at") {
     sortedProducts = [...sortedProducts].sort((a, b) => {
       const aDate = typeof a.created_at === "string" ? new Date(a.created_at).getTime() : 0
@@ -130,10 +138,8 @@ const ProductsListing = ({
     })
   } else if (sortBy === "price_asc" || sortBy === "price_desc") {
     sortedProducts = [...sortedProducts].sort((a, b) => {
-      const aProduct = apiProducts?.find((p: any) => p.id === a.objectID)
-      const bProduct = apiProducts?.find((p: any) => p.id === b.objectID)
-      const aPrice = aProduct?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
-      const bPrice = bProduct?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
+      const aPrice = productById.get(a.objectID)?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
+      const bPrice = productById.get(b.objectID)?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
       return sortBy === "price_asc" ? aPrice - bPrice : bPrice - aPrice
     })
   }

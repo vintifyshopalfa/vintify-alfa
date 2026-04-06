@@ -34,11 +34,20 @@ async function getAuthToken(): Promise<string | undefined> {
 
 export const getFeed = async (
   offset = 0,
-  limit = 20
+  limit = 20,
+  options?: { followedSellerIds?: string[]; sort?: "recent" | "trending" | "mixed" }
 ): Promise<{ posts: Post[]; count: number }> => {
+  const query: Record<string, string> = {
+    offset: String(offset),
+    limit: String(limit),
+    sort: options?.sort ?? "mixed",
+  }
+  if (options?.followedSellerIds?.length) {
+    query.followed_sellers = options.followedSellerIds.join(",")
+  }
   return sdk.client
     .fetch<{ posts: Post[]; count: number }>("/store/posts", {
-      query: { offset: String(offset), limit: String(limit) },
+      query,
       cache: "no-cache",
     })
     .catch(() => ({ posts: [], count: 0 }))

@@ -8,20 +8,28 @@ type FollowButtonProps = {
 }
 
 const STORAGE_KEY = "vintify_following"
+const COOKIE_KEY = "vintify_following"
+const COOKIE_MAX_DAYS = 365
 
 function getFollowedSellers(): Set<string> {
   if (typeof window === "undefined") return new Set()
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    return new Set(stored ? JSON.parse(stored) : [])
+    return new Set(stored ? (JSON.parse(stored) as string[]) : [])
   } catch {
     return new Set()
   }
 }
 
 function saveFollowedSellers(ids: Set<string>): void {
+  const arr = Array.from(ids)
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(ids)))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr))
+  } catch {
+  }
+  try {
+    const expires = new Date(Date.now() + COOKIE_MAX_DAYS * 864e5).toUTCString()
+    document.cookie = `${COOKIE_KEY}=${encodeURIComponent(JSON.stringify(arr))}; path=/; expires=${expires}; SameSite=Lax`
   } catch {
   }
 }

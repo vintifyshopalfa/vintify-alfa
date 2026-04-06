@@ -1,12 +1,24 @@
 import { FeedClientWrapper } from "@/components/social/FeedClientWrapper"
 import { getFeed, togglePostLike, createComment, getPostComments, getUserLikedIds } from "@/lib/data/social"
 import { retrieveCustomer } from "@/lib/data/customer"
+import { cookies } from "next/headers"
 import type { Metadata } from "next"
 import type { Post, Comment } from "@/lib/data/social"
 
 export const metadata: Metadata = {
   title: "Feed",
   description: "Discover the latest posts from sellers on Vintify",
+}
+
+function parseFollowedSellers(cookieValue: string | undefined): string[] {
+  if (!cookieValue) return []
+  try {
+    const decoded = decodeURIComponent(cookieValue)
+    const parsed = JSON.parse(decoded)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
 }
 
 async function handleLike(postId: string): Promise<{ liked: boolean; count: number } | null> {
@@ -24,14 +36,18 @@ async function handleLoadComments(postId: string, offset: number): Promise<{ com
   return getPostComments(postId, offset, 10)
 }
 
-async function handleLoadMore(offset: number): Promise<{ posts: Post[]; count: number }> {
+async function handleLoadMore(offset: number, followedSellerIds: string[]): Promise<{ posts: Post[]; count: number }> {
   "use server"
-  return getFeed(offset, 10)
+  return getFeed(offset, 10, { followedSellerIds, sort: "mixed" })
 }
 
 export default async function FeedPage() {
+  const cookieStore = await cookies()
+  const followedSellerCookie = cookieStore.get("vintify_following")?.value
+  const followedSellerIds = parseFollowedSellers(followedSellerCookie)
+
   const [{ posts, count }, user] = await Promise.all([
-    getFeed(0, 10),
+    getFeed(0, 10, { followedSellerIds, sort: "mixed" }),
     retrieveCustomer().catch(() => null),
   ])
 
@@ -60,7 +76,7 @@ export default async function FeedPage() {
           onLike={handleLike}
           onComment={handleComment}
           onLoadComments={handleLoadComments}
-          onLoadMore={handleLoadMore}
+          onLoadMore={(offset) => handleLoadMore(offset, followedSellerIds)}
         />
       </div>
     </main>
