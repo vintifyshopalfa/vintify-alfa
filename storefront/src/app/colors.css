@@ -14,18 +14,18 @@
     --neutral-900: 22, 22, 22;
     --neutral-1000: 9, 9, 9;
 
-    /* Brand colors are used across all interactive elements such as buttons, links, inputs, etc. This color can define the overall feel and can elicit emotion. */
-    --brand-25: 247, 247, 247;
-    --brand-50: 238, 238, 238;
-    --brand-100: 226, 226, 226;
-    --brand-200: 198, 198, 198;
-    --brand-300: 163, 163, 163;
-    --brand-400: 115, 115, 115;
-    --brand-500: 82, 82, 82;
-    --brand-600: 64, 64, 64;
-    --brand-700: 27, 27, 27;
-    --brand-800: 22, 22, 22;
-    --brand-900: 9, 9, 9;
+    /* Brand colors — Vintify teal palette (#09B1BA) */
+    --brand-25: 241, 254, 254;
+    --brand-50: 220, 250, 251;
+    --brand-100: 180, 240, 243;
+    --brand-200: 132, 222, 228;
+    --brand-300: 75, 200, 208;
+    --brand-400: 28, 188, 197;
+    --brand-500: 9, 177, 186;
+    --brand-600: 7, 148, 158;
+    --brand-700: 6, 118, 126;
+    --brand-800: 5, 89, 96;
+    --brand-900: 3, 59, 64;
     
     /* Red colors are used across error states and in "destructive" actions. */
     --red-25: 254, 243, 242;
@@ -92,8 +92,8 @@
     --bg-component-secondary-hover: var(--neutral-50);
     --bg-component-secondary-pressed: var(--neutral-100);
 
-    --bg-action-primary: var(--brand-900);
-    --bg-action-primary-hover: var(--brand-800);
+    --bg-action-primary: var(--brand-500);
+    --bg-action-primary-hover: var(--brand-600);
     --bg-action-primary-pressed: var(--brand-700);
     --bg-action-secondary: rgba(var(--neutral-1000), 0.05);
     --bg-action-secondary-hover: rgba(var(--neutral-1000), 0.1);
@@ -129,10 +129,10 @@
     --content-secondary: var(--neutral-500);
     --content-tertiary: var(--neutral-0);
 
-    --content-action-primary: var(--brand-900);
-    --content-action-primary-hover: var(--brand-800);
+    --content-action-primary: var(--brand-500);
+    --content-action-primary-hover: var(--brand-600);
     --content-action-primary-pressed: var(--brand-700);
-    --content-action-on-primary: var(--brand-25);
+    --content-action-on-primary: var(--neutral-0);
     --content-action-on-secondary: var(--neutral-1000);
     --content-action-on-tertiary: var(--neutral-0);
 
@@ -152,7 +152,7 @@
 
     --border-primary: var(--neutral-50);
     --border-secondary: var(--neutral-800);
-    --border-action: var(--brand-900);
+    --border-action: var(--brand-500);
     --border-negative-primary: var(--red-700);
     --border-negative-secondary: var(--red-200);
     --border-positive-primary: var(--green-800);

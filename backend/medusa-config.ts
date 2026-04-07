@@ -71,6 +71,9 @@ module.exports = defineConfig({
       resolve: './src/modules/audit-log',
     },
     {
+      resolve: './src/modules/social',
+    },
+    {
       resolve: '@medusajs/medusa/auth',
       options: {
         providers: [

@@ -88,7 +88,21 @@ This is a monorepo with 4 services:
 - **OWASP security headers middleware** at `backend/src/api/middlewares.ts`
 - **Algolia product sync subscriber** at `backend/src/subscribers/algolia-product-sync.ts`
 - **TalkJS messaging endpoint** integrated
+- **Social module** at `backend/src/modules/social/` — Post, Like, Comment models; tables `social_post`, `social_like`, `social_comment` created via direct SQL migration
+  - API routes: `GET/POST /store/posts`, `POST /store/posts/:id/likes`, `GET /store/posts/:id/comments`, `GET/POST /store/products/:id/likes`
 - `@mercurjs` packages **pinned to exact 1.4.3** (no `^`) — critical, see scratchpad
+
+### Storefront
+- **Teal brand palette** (`#09B1BA`) set in `storefront/src/app/colors.css` — used on buttons, borders, actions
+- **Feed page** at `/[locale]/feed` — infinite scroll of seller posts with likes/comments
+- **Social data layer** at `storefront/src/lib/data/social.ts` — `getFeed`, `getProductLikeState`, `createPost`
+- **LikeButton atom** — optimistic UI with debounced API toggle
+- **PostCard organism** — displays post content, author, likes, comment thread
+- **FeedInfiniteScroll organism** — client-side pagination of posts feed
+- **Feed nav link** added to `CategoryNavbar` between "All Products" and category list
+- **SellerTabs** extended with Products/Posts/Reviews tabs; `SellerPostsTab` fetches seller-filtered posts
+- **TalkJS Chat widget** on product detail page via `ProductDetailsSeller` cell
+- **ProductCard** updated to Vinted style — condition badge, fill image, hover scale, price-prominent layout
 
 ## Key Configuration Changes for Replit
 

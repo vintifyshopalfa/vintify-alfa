@@ -24,6 +24,8 @@ import { Addresses } from "./Addressess/Addresses"
 import { ReviewsToWrite } from "./Reviews/ReviewsToWrite"
 import { ReviewsWritten } from "./Reviews/ReviewsWritten"
 import { CartEmpty } from "./CartEmpty/CartEmpty"
+import { PostCard } from "./PostCard/PostCard"
+import { FeedInfiniteScroll } from "./FeedInfiniteScroll/FeedInfiniteScroll"
 
 export {
   ProductCard,
@@ -52,4 +54,6 @@ export {
   ReviewsToWrite,
   ReviewsWritten,
   CartEmpty,
+  PostCard,
+  FeedInfiniteScroll,
 }
