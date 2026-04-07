@@ -26,8 +26,11 @@
   },
   "feed": {
     "title": "Feed",
+    "subtitle": "Descubra posts, produtos e destaques da comunidade",
     "noPosts": "Nenhuma publicação ainda",
     "firstToShare": "Seja o primeiro a compartilhar algo!",
+    "forYou": "Para você",
+    "following": "Seguindo",
     "loadMore": "Carregar mais",
     "loading": "Carregando..."
   },

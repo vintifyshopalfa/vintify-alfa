@@ -19,6 +19,7 @@ export default async function FeedPage() {
     <main className="container">
       <div className="max-w-2xl mx-auto">
         <h1 className="heading-lg mb-6">{t("title")}</h1>
+        <p className="text-secondary mb-6">{t("subtitle")}</p>
         <FeedInfiniteScroll
           initialPosts={posts}
           initialCount={count}

@@ -10,6 +10,8 @@ import { headers } from "next/headers"
 import Script from "next/script"
 import { listRegions } from "@/lib/data/regions"
 import { toHreflang } from "@/lib/helpers/hreflang"
+import { getFeed } from "@/lib/data/social"
+import { FeedInfiniteScroll } from "@/components/organisms"
 
 export async function generateMetadata({
   params,
@@ -110,6 +112,7 @@ export default async function Home({
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
+  const { posts, count } = await getFeed(1, 8)
 
   const headersList = await headers()
   const host = headersList.get("host")
@@ -178,6 +181,11 @@ export default async function Home({
       <div className="px-4 lg:px-8 w-full">
         <HomeCategories heading="SHOP BY CATEGORY" />
       </div>
+      <section className="px-4 lg:px-8 w-full max-w-3xl mx-auto">
+        <h2 className="heading-md mb-2">Comunidade Vintify</h2>
+        <p className="text-secondary mb-4">Feed social personalizado com posts, comentários e descobertas em tempo real.</p>
+        <FeedInfiniteScroll initialPosts={posts} initialCount={count} limit={8} compact />
+      </section>
       <ShopByStyleSection />
     </main>
   )

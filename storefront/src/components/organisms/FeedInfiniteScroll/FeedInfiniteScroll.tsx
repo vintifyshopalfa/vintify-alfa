@@ -2,26 +2,58 @@
 
 import { useState, useCallback } from "react"
 import { PostCard } from "@/components/organisms/PostCard/PostCard"
-import { type SocialPost } from "@/lib/data/social"
-import { Button } from "@/components/atoms"
+import { type FeedMode, type SocialPost } from "@/lib/data/social"
 import { useTranslations } from "next-intl"
 
 type FeedInfiniteScrollProps = {
   initialPosts: SocialPost[]
   initialCount: number
   limit?: number
+  compact?: boolean
 }
 
 export const FeedInfiniteScroll = ({
   initialPosts,
   initialCount,
   limit = 20,
+  compact = false,
 }: FeedInfiniteScrollProps) => {
   const t = useTranslations("feed")
   const [posts, setPosts] = useState<SocialPost[]>(initialPosts)
   const [page, setPage] = useState(1)
+  const [mode, setMode] = useState<FeedMode>("for_you")
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(initialCount > initialPosts.length)
+
+  const baseUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"
+
+  const switchMode = useCallback(async (nextMode: FeedMode) => {
+    if (loading || mode === nextMode) return
+    setLoading(true)
+
+    try {
+      const res = await fetch(
+        `${baseUrl}/store/posts?page=1&limit=${Math.min(limit, 8)}&mode=${nextMode}`,
+        {
+          credentials: "include",
+          headers: {
+            "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "",
+          },
+        }
+      )
+
+      if (res.ok) {
+        const data = await res.json()
+        const fetchedPosts: SocialPost[] = data.posts || []
+        setPosts(fetchedPosts)
+        setPage(1)
+        setMode(nextMode)
+        setHasMore(fetchedPosts.length < (data.count || 0))
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [baseUrl, limit, loading, mode])
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return
@@ -30,7 +62,7 @@ export const FeedInfiniteScroll = ({
     try {
       const nextPage = page + 1
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"}/store/posts?page=${nextPage}&limit=${limit}`,
+        `${baseUrl}/store/posts?page=${nextPage}&limit=${limit}&mode=${mode}`,
         {
           credentials: "include",
           headers: {
@@ -41,15 +73,15 @@ export const FeedInfiniteScroll = ({
       if (res.ok) {
         const data = await res.json()
         const newPosts: SocialPost[] = data.posts || []
-        setPosts(prev => [...prev, ...newPosts])
+        setPosts((prev: SocialPost[]) => [...prev, ...newPosts])
         setPage(nextPage)
-        setHasMore(posts.length + newPosts.length < data.count)
+        setHasMore(posts.length + newPosts.length < (data.count || 0))
       }
     } catch {
     } finally {
       setLoading(false)
     }
-  }, [loading, hasMore, page, limit, posts.length])
+  }, [baseUrl, hasMore, limit, loading, mode, page, posts.length])
 
   if (posts.length === 0) {
     return (
@@ -62,20 +94,47 @@ export const FeedInfiniteScroll = ({
 
   return (
     <div className="space-y-4">
-      {posts.map(post => (
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => switchMode("for_you")}
+          disabled={loading}
+          className={`px-4 py-2 rounded-sm text-sm transition-colors ${
+            mode === "for_you"
+              ? "bg-action text-action-on-primary"
+              : "bg-action-secondary text-action-on-secondary"
+          }`}
+        >
+          {t("forYou")}
+        </button>
+        <button
+          type="button"
+          onClick={() => switchMode("following")}
+          disabled={loading}
+          className={`px-4 py-2 rounded-sm text-sm transition-colors ${
+            mode === "following"
+              ? "bg-action text-action-on-primary"
+              : "bg-action-secondary text-action-on-secondary"
+          }`}
+        >
+          {t("following")}
+        </button>
+      </div>
+
+      {posts.map((post: SocialPost) => (
         <PostCard key={post.id} post={post} />
       ))}
 
-      {hasMore && (
+      {hasMore && !compact && (
         <div className="flex justify-center pt-4">
-          <Button
-            variant="secondary"
+          <button
+            type="button"
             onClick={loadMore}
             disabled={loading}
-            className="min-w-[160px]"
+            className="min-w-[160px] px-4 py-2 rounded-sm text-sm bg-action-secondary text-action-on-secondary disabled:opacity-60"
           >
             {loading ? t("loading") : t("loadMore")}
-          </Button>
+          </button>
         </div>
       )}
     </div>

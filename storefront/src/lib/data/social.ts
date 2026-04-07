@@ -32,10 +32,26 @@ export type LikeState = {
   count: number
 }
 
-export const getFeed = async (page = 1, limit = 20, seller_id?: string): Promise<{ posts: SocialPost[]; count: number }> => {
+export type FeedMode = "for_you" | "following"
+
+export const getFeed = async (
+  page = 1,
+  limit = 20,
+  seller_id?: string,
+  mode: FeedMode = "for_you",
+  followingSellerIds?: string[]
+): Promise<{ posts: SocialPost[]; count: number }> => {
   const authHeaders = await getAuthHeaders()
-  const query: Record<string, string> = { page: String(page), limit: String(limit) }
+  const query: Record<string, string> = {
+    page: String(page),
+    limit: String(limit),
+    mode,
+  }
+
   if (seller_id) query.seller_id = seller_id
+  if (followingSellerIds?.length) {
+    query.following_seller_ids = followingSellerIds.join(",")
+  }
 
   return sdk.client
     .fetch<{ posts: SocialPost[]; count: number }>(`/store/posts`, {
@@ -63,7 +79,7 @@ export const getPostComments = async (postId: string): Promise<SocialComment[]> 
       headers: authHeaders as Record<string, string>,
       cache: "no-store",
     })
-    .then(r => r.comments)
+    .then((r: { comments: SocialComment[] }) => r.comments)
     .catch(() => [])
 }
 
@@ -80,6 +96,6 @@ export const createPost = async (data: {
       headers: authHeaders as Record<string, string>,
       body: data as Record<string, unknown>,
     })
-    .then(r => r.post)
+    .then((r: { post: SocialPost }) => r.post)
     .catch(() => null)
 }
