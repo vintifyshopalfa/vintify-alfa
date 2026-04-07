@@ -9,12 +9,14 @@ const nextConfig: NextConfig = {
   },
   trailingSlash: false,
   reactStrictMode: true,
+  allowedDevOrigins: ["*.replit.dev", "*.kirk.replit.dev", "*.repl.co"],
   logging: {
     fetches: {
       fullUrl: true,
     },
   },
   images: {
+    qualities: [25, 50, 75, 100],
     remotePatterns: [
       {
         protocol: "https",
