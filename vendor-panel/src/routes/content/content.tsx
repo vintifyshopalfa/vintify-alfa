@@ -63,6 +63,24 @@ type PostFormData = {
   channels: Record<CmsChannel, boolean>
 }
 
+function getPublishErrorMessage(error: unknown): string {
+  const msg =
+    typeof error === "object" && error !== null && "message" in error
+      ? String((error as { message?: unknown }).message || "")
+      : ""
+
+  const normalized = msg.toLowerCase()
+  if (normalized.includes("meta") && normalized.includes("disconnect")) {
+    return "Conta Meta desconectada — clique em Settings para reconectar."
+  }
+
+  if (normalized.includes("rate") || normalized.includes("limit")) {
+    return "Erro temporário da Meta — tente novamente em 5 minutos."
+  }
+
+  return msg || "Falha ao publicar. O conteúdo foi mantido como rascunho para nova tentativa."
+}
+
 function MetricsModal({ post, onClose }: { post: CmsPost; onClose: () => void }) {
   const { metrics, isPending } = useCmsPostMetrics(post.id)
 
@@ -142,7 +160,7 @@ function PostCard({ post }: { post: CmsPost }) {
         ? `Published with warnings: ${result.warnings}`
         : `Published to ${result.channels?.join(", ")}`)
     } catch (e: any) {
-      toast.error(e.message || "Publish failed")
+      toast.error(getPublishErrorMessage(e))
     } finally {
       setPublishing(false)
     }
@@ -288,7 +306,8 @@ export const Content = () => {
             body: { channels: selectedChannels },
           })
           toast.success("Post created and published!")
-        } catch {
+        } catch (e: any) {
+          toast.warning(getPublishErrorMessage(e))
           toast.success("Draft saved — publish it manually from the list.")
         }
       } else {
