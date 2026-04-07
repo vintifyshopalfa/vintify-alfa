@@ -123,13 +123,25 @@ export const Dashboard = () => {
     queryFn: () => sdk.client.fetch<ReviewsMetrics>("/admin/reviews", { method: "GET", query: { limit: 1 } }).catch(() => ({ reviews: [], count: 0 })),
   })
 
-  const totalRevenue = (allOrders ?? []).reduce(
-    (sum: number, o: HttpTypes.AdminOrder) => sum + (o.total ?? 0),
-    0
-  )
+  const customerOrderCounts = new Map<string, number>()
+  const totalRevenue = (allOrders ?? []).reduce((sum: number, o: HttpTypes.AdminOrder) => {
+    const customerId = o.customer_id || ""
+    if (customerId) {
+      customerOrderCounts.set(customerId, (customerOrderCounts.get(customerId) || 0) + 1)
+    }
+    return sum + (o.total ?? 0)
+  }, 0)
+
   const avgOrderValue = totalOrders && totalOrders > 0 ? totalRevenue / Math.min(totalOrders, (allOrders ?? []).length) : 0
   const commissionRate = defaultCommission?.percentage_rate ?? 10
   const commissionEarned = totalRevenue * (commissionRate / 100)
+
+  const sampleOrders = (allOrders ?? []).length || 1
+  const conversionRate = totalCustomers ? Math.min(100, (sampleOrders / Math.max(totalCustomers, 1)) * 100) : 0
+  const repeatBuyers = Array.from(customerOrderCounts.values()).filter((count) => count > 1).length
+  const activeBuyers = customerOrderCounts.size || 1
+  const repeatPurchaseRate = (repeatBuyers / activeBuyers) * 100
+  const churnRate = Math.max(0, 100 - repeatPurchaseRate)
 
   const metrics: Array<{
     title: string
@@ -210,6 +222,30 @@ export const Dashboard = () => {
       icon: Envelope,
       color: "green",
       loading: customersLoading,
+    },
+    {
+      title: "Conversion Rate",
+      value: `${conversionRate.toFixed(1)}%`,
+      subtitle: "Orders vs active buyers sample",
+      icon: ChartPie,
+      color: "blue",
+      loading: ordersLoading || customersLoading,
+    },
+    {
+      title: "Repeat Purchase Rate",
+      value: `${repeatPurchaseRate.toFixed(1)}%`,
+      subtitle: "Buyers with 2+ orders",
+      icon: History,
+      color: "green",
+      loading: ordersLoading,
+    },
+    {
+      title: "Estimated Churn Rate",
+      value: `${churnRate.toFixed(1)}%`,
+      subtitle: "Inverse of repeat purchase trend",
+      icon: ExclamationCircle,
+      color: "orange",
+      loading: ordersLoading,
     },
     {
       title: "Active Listings",
