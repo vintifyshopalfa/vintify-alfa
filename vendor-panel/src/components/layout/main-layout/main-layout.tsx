@@ -14,6 +14,7 @@ import {
   ListCheckbox,
   ChatBubbleLeftRight,
   Newspaper,
+  PencilSquare,
 } from "@medusajs/icons"
 import { Divider, Text, clx } from "@medusajs/ui"
 import { Collapsible as RadixCollapsible } from "radix-ui"
@@ -193,6 +194,17 @@ const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
       icon: <Newspaper />,
       label: "Meta & CMS",
       to: "/meta-cms",
+    },
+    {
+      icon: <PencilSquare />,
+      label: "Content",
+      to: "/content",
+      items: [
+        {
+          label: "Settings",
+          to: "/content/settings",
+        },
+      ],
     },
     {
       icon: <ListCheckbox />,

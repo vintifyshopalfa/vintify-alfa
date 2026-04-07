@@ -74,6 +74,9 @@ module.exports = defineConfig({
       resolve: './src/modules/social',
     },
     {
+      resolve: './src/modules/cms',
+    },
+    {
       resolve: '@medusajs/medusa/auth',
       options: {
         providers: [
