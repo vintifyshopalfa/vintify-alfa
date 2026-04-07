@@ -103,6 +103,14 @@ This is a monorepo with 4 services:
 - **SellerTabs** extended with Products/Posts/Reviews tabs; `SellerPostsTab` fetches seller-filtered posts
 - **TalkJS Chat widget** on product detail page via `ProductDetailsSeller` cell
 - **ProductCard** updated to Vinted style — condition badge, fill image, hover scale, price-prominent layout
+- **i18n with next-intl** — restricted to `en` (US, `/us`) and `pt-BR` (Brazil, `/br`) locales
+  - Middleware allows only `us` and `br` country codes (all others default to `us`)
+  - `countryToLocale()` in `src/i18n/request.ts` maps `br` → `pt-BR`, others → `en`
+  - Messages at `storefront/messages/en.json` and `storefront/messages/pt-BR.json`
+  - `NextIntlClientProvider` in both `(main)/layout.tsx` and `(checkout)/layout.tsx`
+  - Translated: `CategoryNavbar`, `CountrySelector`, `SellNowButton`, `Footer`, `FeedInfiniteScroll`, `SellerTabs`, `ProductCard` condition labels
+  - **`TabsList`** updated to support explicit `value` prop so translated labels don't break URL-based tab routing
+  - Brazil region (BRL currency) created in Medusa for `/br` routing to work
 
 ## Key Configuration Changes for Replit
 

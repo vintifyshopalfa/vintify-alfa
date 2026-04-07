@@ -5,6 +5,7 @@ import { Toaster } from "@medusajs/ui"
 import Head from "next/head"
 import { retrieveCart } from "@/lib/data/cart"
 import { Providers } from "./providers"
+import { getLocale } from "next-intl/server"
 
 const funnelDisplay = Funnel_Display({
   variable: "--font-funnel-sans",
@@ -37,13 +38,11 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-  params,
 }: Readonly<{
   children: React.ReactNode
-  params: Promise<{ locale: string }>
 }>) {
-  const { locale } = await params
   const cart = await retrieveCart()
+  const locale = await getLocale().catch(() => "en")
 
   const ALGOLIA_APP = process.env.NEXT_PUBLIC_ALGOLIA_ID
   const htmlLang = locale || "en"

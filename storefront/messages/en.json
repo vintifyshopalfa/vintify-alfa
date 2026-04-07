@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "allProducts": "All Products",
+    "feed": "Feed"
+  },
+  "header": {
+    "shippingTo": "Shipping to",
+    "sellNow": "Sell now"
+  },
+  "footer": {
+    "customerServices": "Customer Services",
+    "about": "About",
+    "connect": "Connect",
+    "copyright": "© 2024 Fleek",
+    "links": {
+      "faqs": "FAQs",
+      "trackOrder": "Track Order",
+      "returns": "Returns",
+      "delivery": "Delivery",
+      "payment": "Payment",
+      "aboutUs": "About us",
+      "blog": "Blog",
+      "privacyPolicy": "Privacy Policy",
+      "termsConditions": "Terms & Conditions"
+    }
+  },
+  "feed": {
+    "title": "Feed",
+    "noPosts": "No posts yet",
+    "firstToShare": "Be the first to share something!",
+    "loadMore": "Load more",
+    "loading": "Loading..."
+  },
+  "product": {
+    "condition": {
+      "new_with_tags": "New with tags",
+      "new_without_tags": "New",
+      "very_good": "Very good",
+      "good": "Good",
+      "satisfactory": "Satisfactory"
+    },
+    "contactSeller": "Contact Seller",
+    "addToCart": "Add to cart",
+    "buyNow": "Buy now",
+    "outOfStock": "Out of stock",
+    "noOptions": "No options available"
+  },
+  "seller": {
+    "tabs": {
+      "products": "Products",
+      "posts": "Posts",
+      "reviews": "Reviews"
+    }
+  },
+  "cart": {
+    "empty": "Your cart is empty",
+    "checkout": "Go to checkout",
+    "cartButton": "My cart"
+  },
+  "common": {
+    "search": "Search product",
+    "seeMore": "See more",
+    "close": "Close"
+  }
+}

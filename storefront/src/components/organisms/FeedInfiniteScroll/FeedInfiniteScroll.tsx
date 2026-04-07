@@ -4,6 +4,7 @@ import { useState, useCallback } from "react"
 import { PostCard } from "@/components/organisms/PostCard/PostCard"
 import { type SocialPost } from "@/lib/data/social"
 import { Button } from "@/components/atoms"
+import { useTranslations } from "next-intl"
 
 type FeedInfiniteScrollProps = {
   initialPosts: SocialPost[]
@@ -16,6 +17,7 @@ export const FeedInfiniteScroll = ({
   initialCount,
   limit = 20,
 }: FeedInfiniteScrollProps) => {
+  const t = useTranslations("feed")
   const [posts, setPosts] = useState<SocialPost[]>(initialPosts)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -52,8 +54,8 @@ export const FeedInfiniteScroll = ({
   if (posts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-neutral-400">
-        <p className="heading-sm mb-2">No posts yet</p>
-        <p className="text-sm">Be the first to share something!</p>
+        <p className="heading-sm mb-2">{t("noPosts")}</p>
+        <p className="text-sm">{t("firstToShare")}</p>
       </div>
     )
   }
@@ -72,7 +74,7 @@ export const FeedInfiniteScroll = ({
             disabled={loading}
             className="min-w-[160px]"
           >
-            {loading ? "Loading..." : "Load more"}
+            {loading ? t("loading") : t("loadMore")}
           </Button>
         </div>
       )}

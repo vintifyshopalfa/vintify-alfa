@@ -2,14 +2,24 @@ import { Button } from "@/components/atoms"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { CollapseIcon } from "@/icons"
 import Image from "next/image"
+import { NextIntlClientProvider } from "next-intl"
+import { getMessages, setRequestLocale } from "next-intl/server"
+import { countryToLocale } from "@/i18n/request"
 
-export default async function RootLayout({
+export default async function CheckoutLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode
+  params: Promise<{ locale: string }>
 }>) {
+  const { locale: countryCode } = await params
+  const locale = countryToLocale(countryCode)
+  setRequestLocale(locale)
+  const messages = await getMessages()
+
   return (
-    <>
+    <NextIntlClientProvider locale={locale} messages={messages}>
       <header>
         <div className="relative w-full py-2 lg:px-8 px-4">
           <div className="absolute top-3">
@@ -34,6 +44,6 @@ export default async function RootLayout({
         </div>
       </header>
       {children}
-    </>
+    </NextIntlClientProvider>
   )
 }

@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "allProducts": "Todos os Produtos",
+    "feed": "Feed"
+  },
+  "header": {
+    "shippingTo": "Envio para",
+    "sellNow": "Vender agora"
+  },
+  "footer": {
+    "customerServices": "Atendimento ao Cliente",
+    "about": "Sobre",
+    "connect": "Conecte-se",
+    "copyright": "© 2024 Fleek",
+    "links": {
+      "faqs": "Perguntas Frequentes",
+      "trackOrder": "Rastrear Pedido",
+      "returns": "Devoluções",
+      "delivery": "Entrega",
+      "payment": "Pagamento",
+      "aboutUs": "Sobre nós",
+      "blog": "Blog",
+      "privacyPolicy": "Política de Privacidade",
+      "termsConditions": "Termos e Condições"
+    }
+  },
+  "feed": {
+    "title": "Feed",
+    "noPosts": "Nenhuma publicação ainda",
+    "firstToShare": "Seja o primeiro a compartilhar algo!",
+    "loadMore": "Carregar mais",
+    "loading": "Carregando..."
+  },
+  "product": {
+    "condition": {
+      "new_with_tags": "Novo com etiquetas",
+      "new_without_tags": "Novo",
+      "very_good": "Muito bom",
+      "good": "Bom",
+      "satisfactory": "Satisfatório"
+    },
+    "contactSeller": "Contatar Vendedor",
+    "addToCart": "Adicionar ao carrinho",
+    "buyNow": "Comprar agora",
+    "outOfStock": "Fora de estoque",
+    "noOptions": "Nenhuma opção disponível"
+  },
+  "seller": {
+    "tabs": {
+      "products": "Produtos",
+      "posts": "Publicações",
+      "reviews": "Avaliações"
+    }
+  },
+  "cart": {
+    "empty": "Seu carrinho está vazio",
+    "checkout": "Ir para o checkout",
+    "cartButton": "Meu carrinho"
+  },
+  "common": {
+    "search": "Buscar produto",
+    "seeMore": "Ver mais",
+    "close": "Fechar"
+  }
+}

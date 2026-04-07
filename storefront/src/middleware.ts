@@ -5,6 +5,8 @@ const BACKEND_URL = process.env.MEDUSA_BACKEND_URL
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
 
+const ALLOWED_COUNTRY_CODES = ["us", "br"]
+
 const regionMapCache = {
   regionMap: new Map<string, HttpTypes.StoreRegion>(),
   regionMapUpdated: Date.now(),
@@ -75,14 +77,17 @@ async function getCountryCode(
 
     const urlCountryCode = request.nextUrl.pathname.split("/")[1]?.toLowerCase()
 
-    if (urlCountryCode && regionMap.has(urlCountryCode)) {
+    const isAllowed = (cc: string) =>
+      ALLOWED_COUNTRY_CODES.includes(cc) && regionMap.has(cc)
+
+    if (urlCountryCode && isAllowed(urlCountryCode)) {
       countryCode = urlCountryCode
-    } else if (vercelCountryCode && regionMap.has(vercelCountryCode)) {
+    } else if (vercelCountryCode && isAllowed(vercelCountryCode)) {
       countryCode = vercelCountryCode
-    } else if (regionMap.has(DEFAULT_REGION)) {
+    } else if (isAllowed(DEFAULT_REGION)) {
       countryCode = DEFAULT_REGION
-    } else if (regionMap.keys().next().value) {
-      countryCode = regionMap.keys().next().value
+    } else {
+      countryCode = ALLOWED_COUNTRY_CODES.find((cc) => regionMap.has(cc)) ?? DEFAULT_REGION
     }
 
     return countryCode

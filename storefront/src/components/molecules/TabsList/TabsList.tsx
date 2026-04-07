@@ -5,18 +5,21 @@ export const TabsList = ({
   list,
   activeTab,
 }: {
-  list: { label: string; link: string }[]
+  list: { label: string; link: string; value?: string }[]
   activeTab: string
 }) => {
   return (
     <div className="flex gap-4 w-full">
-      {list.map(({ label, link }) => (
-        <LocalizedClientLink key={label} href={link}>
-          <TabsTrigger isActive={activeTab === label.toLowerCase()}>
-            {label}
-          </TabsTrigger>
-        </LocalizedClientLink>
-      ))}
+      {list.map(({ label, link, value }) => {
+        const key = value ?? label.toLowerCase()
+        return (
+          <LocalizedClientLink key={key} href={link}>
+            <TabsTrigger isActive={activeTab === key}>
+              {label}
+            </TabsTrigger>
+          </LocalizedClientLink>
+        )
+      })}
     </div>
   )
 }

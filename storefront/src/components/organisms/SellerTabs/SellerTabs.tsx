@@ -4,11 +4,12 @@ import { AlgoliaProductsListing, ProductListing } from "@/components/sections"
 import { TabsContent, TabsList } from "@/components/molecules"
 import { SellerReviewTab } from "@/components/cells"
 import { SellerPostsTab } from "@/components/cells/SellerPostsTab/SellerPostsTab"
+import { getTranslations } from "next-intl/server"
 
 const ALGOLIA_ID = process.env.NEXT_PUBLIC_ALGOLIA_ID
 const ALGOLIA_SEARCH_KEY = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY
 
-export const SellerTabs = ({
+export const SellerTabs = async ({
   tab,
   seller_handle,
   seller_id,
@@ -21,10 +22,12 @@ export const SellerTabs = ({
   locale: string
   currency_code: string
 }) => {
+  const t = await getTranslations("seller.tabs")
+
   const tabsList = [
-    { label: "products", link: `/sellers/${seller_handle}/` },
-    { label: "posts", link: `/sellers/${seller_handle}/posts` },
-    { label: "reviews", link: `/sellers/${seller_handle}/reviews` },
+    { label: t("products"), value: "products", link: `/sellers/${seller_handle}/` },
+    { label: t("posts"), value: "posts", link: `/sellers/${seller_handle}/posts` },
+    { label: t("reviews"), value: "reviews", link: `/sellers/${seller_handle}/reviews` },
   ]
 
   return (

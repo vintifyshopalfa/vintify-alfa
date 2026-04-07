@@ -1,4 +1,7 @@
 import type { NextConfig } from "next"
+import createNextIntlPlugin from "next-intl/plugin"
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
 const nextConfig: NextConfig = {
   typescript: {
@@ -52,11 +55,11 @@ const nextConfig: NextConfig = {
         hostname: "*.replit.dev",
       },
       ...(process.env.NEXT_PUBLIC_MINIO_ENDPOINT ? [{
-        protocol: "https",
+        protocol: "https" as const,
         hostname: process.env.NEXT_PUBLIC_MINIO_ENDPOINT,
       }] : []),
     ],
   },
 }
 
-module.exports = nextConfig
+module.exports = withNextIntl(nextConfig)

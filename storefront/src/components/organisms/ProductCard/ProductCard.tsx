@@ -6,13 +6,14 @@ import { BaseHit, Hit } from "instantsearch.js"
 import clsx from "clsx"
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
 import { getProductPrice } from "@/lib/helpers/get-product-price"
+import { useTranslations } from "next-intl"
 
-const CONDITION_LABELS: Record<string, { label: string; color: string }> = {
-  new_with_tags: { label: "New with tags", color: "bg-green-100 text-green-800" },
-  new_without_tags: { label: "New", color: "bg-green-50 text-green-700" },
-  very_good: { label: "Very good", color: "bg-blue-50 text-blue-700" },
-  good: { label: "Good", color: "bg-blue-50 text-blue-600" },
-  satisfactory: { label: "Satisfactory", color: "bg-yellow-50 text-yellow-700" },
+const CONDITION_COLORS: Record<string, string> = {
+  new_with_tags: "bg-green-100 text-green-800",
+  new_without_tags: "bg-green-50 text-green-700",
+  very_good: "bg-blue-50 text-blue-700",
+  good: "bg-blue-50 text-blue-600",
+  satisfactory: "bg-yellow-50 text-yellow-700",
 }
 
 export const ProductCard = ({
@@ -22,6 +23,8 @@ export const ProductCard = ({
   product: Hit<HttpTypes.StoreProduct> | Partial<Hit<BaseHit>>
   api_product?: HttpTypes.StoreProduct | null
 }) => {
+  const t = useTranslations("product.condition")
+
   if (!api_product) {
     return null
   }
@@ -32,7 +35,10 @@ export const ProductCard = ({
 
   const productName = String(product.title || "Product")
   const condition = (product as Record<string, unknown>).condition as string | undefined
-  const conditionInfo = condition ? CONDITION_LABELS[condition] : null
+  const conditionColor = condition ? CONDITION_COLORS[condition] : null
+  const conditionLabel = condition && CONDITION_COLORS[condition]
+    ? t(condition as any)
+    : null
 
   return (
     <div
@@ -67,14 +73,14 @@ export const ProductCard = ({
               className="object-contain p-4 opacity-40"
             />
           )}
-          {conditionInfo && (
+          {conditionLabel && conditionColor && (
             <span
               className={clsx(
                 "absolute top-2 left-2 text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
-                conditionInfo.color
+                conditionColor
               )}
             >
-              {conditionInfo.label}
+              {conditionLabel}
             </span>
           )}
         </div>

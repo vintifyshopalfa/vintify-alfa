@@ -1,49 +1,73 @@
 import LocalizedClientLink from "@/components/molecules/LocalizedLink/LocalizedLink"
-import footerLinks from "@/data/footerLinks"
+import { getTranslations } from "next-intl/server"
 
-export function Footer() {
+export async function Footer() {
+  const t = await getTranslations("footer")
+
+  const customerServiceLinks = [
+    { key: "faqs", path: "#" },
+    { key: "trackOrder", path: "#" },
+    { key: "returns", path: "#" },
+    { key: "delivery", path: "#" },
+    { key: "payment", path: "#" },
+  ]
+
+  const aboutLinks = [
+    { key: "aboutUs", path: "#" },
+    { key: "blog", path: "#" },
+    { key: "privacyPolicy", path: "#" },
+    { key: "termsConditions", path: "#" },
+  ]
+
+  const connectLinks = [
+    { label: "Facebook", path: "https://facebook.com" },
+    { label: "Instagram", path: "https://instagram.com" },
+    { label: "LinkedIn", path: "https://linkedin.com" },
+  ]
+
   return (
     <footer className="bg-primary container">
       <div className="grid grid-cols-1 lg:grid-cols-3">
-        {/* Customer Services Column */}
         <div className="p-6 border rounded-sm">
           <h2 className="heading-sm text-primary mb-3 uppercase">
-            Customer services
+            {t("customerServices")}
           </h2>
           <nav className="space-y-3" aria-label="Customer services navigation">
-            {footerLinks.customerServices.map(({ label, path }) => (
+            {customerServiceLinks.map(({ key, path }) => (
               <LocalizedClientLink
-                key={label}
+                key={key}
                 href={path}
                 className="block label-md"
               >
-                {label}
+                {t(`links.${key}` as any)}
               </LocalizedClientLink>
             ))}
           </nav>
         </div>
 
-        {/* About Column */}
         <div className="p-6 border rounded-sm">
-          <h2 className="heading-sm text-primary mb-3 uppercase">About</h2>
+          <h2 className="heading-sm text-primary mb-3 uppercase">
+            {t("about")}
+          </h2>
           <nav className="space-y-3" aria-label="About navigation">
-            {footerLinks.about.map(({ label, path }) => (
+            {aboutLinks.map(({ key, path }) => (
               <LocalizedClientLink
-                key={label}
+                key={key}
                 href={path}
                 className="block label-md"
               >
-                {label}
+                {t(`links.${key}` as any)}
               </LocalizedClientLink>
             ))}
           </nav>
         </div>
 
-        {/* Connect Column */}
         <div className="p-6 border rounded-sm">
-          <h2 className="heading-sm text-primary mb-3 uppercase">connect</h2>
+          <h2 className="heading-sm text-primary mb-3 uppercase">
+            {t("connect")}
+          </h2>
           <nav className="space-y-3" aria-label="Social media navigation">
-            {footerLinks.connect.map(({ label, path }) => (
+            {connectLinks.map(({ label, path }) => (
               <a
                 aria-label={`Go to ${label} page`}
                 title={`Go to ${label} page`}
@@ -60,8 +84,8 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="py-6 border rounded-sm ">
-        <p className="text-md text-secondary text-center ">© 2024 Fleek</p>
+      <div className="py-6 border rounded-sm">
+        <p className="text-md text-secondary text-center">{t("copyright")}</p>
       </div>
     </footer>
   )
