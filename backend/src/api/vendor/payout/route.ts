@@ -2,6 +2,7 @@ import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/frame
 import { SELLER_MODULE } from "@mercurjs/b2c-core/modules/seller"
 import { z } from "zod"
 import { createSellerPayoutWorkflow, type SellerPayoutOutput } from "../../../workflows/create-seller-payout"
+import { getPaymentProvider } from "../../../modules/payment-abstraction"
 
 const PAYOUT_MAX_AMOUNT = 1_000_000_00
 
@@ -45,7 +46,8 @@ export const POST = async (req: AuthenticatedMedusaRequest<unknown>, res: Medusa
 
   const { amount, currency, destination_account_id }: PayoutBody = parsed.data
 
-  if (!process.env.STRIPE_SECRET_API_KEY) {
+  const paymentProvider = getPaymentProvider()
+  if (!paymentProvider) {
     return res.status(503).json({ message: "Payment processing is not configured" })
   }
 
@@ -71,7 +73,12 @@ export const POST = async (req: AuthenticatedMedusaRequest<unknown>, res: Medusa
       return res.status(403).json({ message: "Your seller account is not approved for payouts" })
     }
 
-    const registeredAccount = actorSeller.metadata?.stripe_account_id as string | undefined
+    const providerName = (process.env.PAYMENT_PROVIDER || "stripe").toLowerCase()
+    const providerAccountKey = providerName === "stripe" ? "stripe_account_id" : "payout_account_id"
+    const registeredAccount =
+      (actorSeller.metadata?.[providerAccountKey] as string | undefined) ||
+      (actorSeller.metadata?.payout_account_id as string | undefined) ||
+      (actorSeller.metadata?.stripe_account_id as string | undefined)
     if (!registeredAccount) {
       return res.status(403).json({ message: "No payout account registered. Please connect your Stripe account." })
     }

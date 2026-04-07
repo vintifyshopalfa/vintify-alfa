@@ -7,14 +7,27 @@ export type {
   PaymentResult,
 } from "./types"
 export { StripePaymentProvider } from "./stripe-provider"
+export { NoopPaymentProvider } from "./noop-provider"
 
 let _provider: import("./types").IPaymentProvider | undefined
 
-export function getPaymentProvider(): import("./types").IPaymentProvider {
-  if (!_provider) {
+function resolveProvider(): import("./types").IPaymentProvider {
+  const configured = (process.env.PAYMENT_PROVIDER || "stripe").toLowerCase()
+
+  if (configured === "stripe") {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { StripePaymentProvider: SP } = require("./stripe-provider")
-    _provider = new SP() as import("./types").IPaymentProvider
+    return new SP() as import("./types").IPaymentProvider
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { NoopPaymentProvider: NP } = require("./noop-provider")
+  return new NP() as import("./types").IPaymentProvider
+}
+
+export function getPaymentProvider(): import("./types").IPaymentProvider {
+  if (!_provider) {
+    _provider = resolveProvider()
   }
   return _provider!
 }
