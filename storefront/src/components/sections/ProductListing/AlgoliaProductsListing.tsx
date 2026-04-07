@@ -6,7 +6,6 @@ import {
   ProductCard,
   ProductListingActiveFilters,
   ProductsPagination,
-  ProductListingHeader,
 } from "@/components/organisms"
 import { client } from "@/lib/client"
 import { Configure, useHits } from "react-instantsearch"
@@ -110,41 +109,17 @@ const ProductsListing = ({
   if (!results?.processingTimeMS) return <ProductListingSkeleton />
 
   const page: number = +(searchParamas.get("page") || 1)
-  const sortBy = searchParamas.get("sortBy") || ""
-
   const filteredProducts = items.filter((pr) =>
     apiProducts?.some((p: any) => p.id === pr.objectID)
   )
 
-  let sortedProducts = filteredProducts.filter((pr) =>
-    apiProducts?.some(
-      (p: any) => p.id === pr.objectID && filterProductsByCurrencyCode(p)
+  const products = filteredProducts
+    .filter((pr) =>
+      apiProducts?.some(
+        (p: any) => p.id === pr.objectID && filterProductsByCurrencyCode(p)
+      )
     )
-  )
-
-  type ApiProductLookup = { id: string; variants?: Array<{ calculated_price?: { calculated_amount?: number } }> }
-  const productById = new Map<string, ApiProductLookup>()
-  if (apiProducts) {
-    for (const p of apiProducts as ApiProductLookup[]) {
-      productById.set(p.id, p)
-    }
-  }
-
-  if (sortBy === "created_at") {
-    sortedProducts = [...sortedProducts].sort((a, b) => {
-      const aDate = typeof a.created_at === "string" ? new Date(a.created_at).getTime() : 0
-      const bDate = typeof b.created_at === "string" ? new Date(b.created_at).getTime() : 0
-      return bDate - aDate
-    })
-  } else if (sortBy === "price_asc" || sortBy === "price_desc") {
-    sortedProducts = [...sortedProducts].sort((a, b) => {
-      const aPrice = productById.get(a.objectID)?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
-      const bPrice = productById.get(b.objectID)?.variants?.[0]?.calculated_price?.calculated_amount ?? 0
-      return sortBy === "price_asc" ? aPrice - bPrice : bPrice - aPrice
-    })
-  }
-
-  const products = sortedProducts.slice((page - 1) * PRODUCT_LIMIT, page * PRODUCT_LIMIT)
+    .slice((page - 1) * PRODUCT_LIMIT, page * PRODUCT_LIMIT)
 
   const count = filteredProducts?.length || 0
   const pages = Math.ceil(count / PRODUCT_LIMIT) || 1
@@ -188,7 +163,9 @@ const ProductsListing = ({
 
   return (
     <div className="min-h-[70vh]">
-      <ProductListingHeader total={count} />
+      <div className="flex justify-between w-full items-center">
+        <div className="my-4 label-md">{`${count} listings`}</div>
+      </div>
       <div className="hidden md:block">
         <ProductListingActiveFilters />
       </div>

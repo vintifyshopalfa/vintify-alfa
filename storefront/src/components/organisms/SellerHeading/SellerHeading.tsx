@@ -1,9 +1,7 @@
 import { SellerInfo } from "@/components/molecules"
 import { SellerProps } from "@/types/seller"
 import { Chat } from "../Chat/Chat"
-import { FollowButton } from "@/components/social/FollowButton"
-
-type CustomerLike = { id: string; email: string; [key: string]: unknown }
+import { HttpTypes } from "@medusajs/types"
 
 export const SellerHeading = ({
   seller,
@@ -12,22 +10,21 @@ export const SellerHeading = ({
 }: {
   header: boolean
   seller: SellerProps
-  user: CustomerLike | null
+  user: HttpTypes.StoreCustomer | null
 }) => {
   return (
     <div className="flex justify-between flex-col lg:flex-row">
       <SellerInfo header seller={seller} />
-      <div className="flex items-center gap-3 mt-4 lg:mt-0">
-        <FollowButton sellerId={seller.id} sellerName={seller.name || undefined} />
-        {user && (
+      {user && (
+        <div className="flex items-center gap-2 mt-4 lg:mt-0">
           <Chat
             user={user}
             seller={seller}
             icon
             buttonClassNames="w-10 h-10 flex justify-center items-center p-0"
           />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

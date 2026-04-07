@@ -14,18 +14,18 @@
     --neutral-900: 22, 22, 22;
     --neutral-1000: 9, 9, 9;
 
-    /* Brand colors — Vinted teal palette (#09B1BA) */
-    --brand-25: 228, 248, 249;
-    --brand-50: 200, 240, 242;
-    --brand-100: 160, 225, 228;
-    --brand-200: 100, 205, 210;
-    --brand-300: 45, 188, 195;
-    --brand-400: 18, 182, 190;
-    --brand-500: 9, 177, 186;
-    --brand-600: 7, 152, 160;
-    --brand-700: 6, 120, 127;
-    --brand-800: 4, 90, 95;
-    --brand-900: 2, 55, 58;
+    /* Brand colors are used across all interactive elements such as buttons, links, inputs, etc. This color can define the overall feel and can elicit emotion. */
+    --brand-25: 247, 247, 247;
+    --brand-50: 238, 238, 238;
+    --brand-100: 226, 226, 226;
+    --brand-200: 198, 198, 198;
+    --brand-300: 163, 163, 163;
+    --brand-400: 115, 115, 115;
+    --brand-500: 82, 82, 82;
+    --brand-600: 64, 64, 64;
+    --brand-700: 27, 27, 27;
+    --brand-800: 22, 22, 22;
+    --brand-900: 9, 9, 9;
     
     /* Red colors are used across error states and in "destructive" actions. */
     --red-25: 254, 243, 242;

@@ -1,7 +1,7 @@
 import { Footer, Header } from "@/components/organisms"
-import { TalkJSProvider } from "@/components/organisms/TalkJSProvider/TalkJSProvider"
 import { retrieveCustomer } from "@/lib/data/customer"
 import { checkRegion } from "@/lib/helpers/check-region"
+import { Session } from "@talkjs/react"
 import { redirect } from "next/navigation"
 
 export default async function RootLayout({
@@ -32,11 +32,11 @@ export default async function RootLayout({
 
   return (
     <>
-      <TalkJSProvider appId={APP_ID} userId={user.id}>
+      <Session appId={APP_ID} userId={user.id}>
         <Header />
         {children}
         <Footer />
-      </TalkJSProvider>
+      </Session>
     </>
   )
 }

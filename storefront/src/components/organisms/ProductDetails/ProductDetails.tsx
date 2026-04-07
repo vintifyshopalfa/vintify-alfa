@@ -13,9 +13,6 @@ import { AdditionalAttributeProps } from "@/types/product"
 import { SellerProps } from "@/types/seller"
 import { Wishlist } from "@/types/wishlist"
 import { HttpTypes } from "@medusajs/types"
-import { ProductLikeSection } from "@/components/social/ProductLikeSection"
-import { ProductCommentsSection } from "@/components/social/ProductCommentsSection"
-import { Suspense } from "react"
 
 export const ProductDetails = async ({
   product,
@@ -47,16 +44,8 @@ export const ProductDetails = async ({
       <ProductAdditionalAttributes
         attributes={product?.attribute_values || []}
       />
-      <Suspense>
-        <ProductLikeSection productId={product.id} />
-      </Suspense>
       <ProductDetailsShipping />
-      <ProductCommentsSection productId={product.id} isAuthenticated={!!user} />
-      <ProductDetailsSeller
-        seller={product?.seller}
-        productTitle={product?.title}
-        hasTalkJS={!!process.env.NEXT_PUBLIC_TALKJS_APP_ID}
-      />
+      <ProductDetailsSeller seller={product?.seller} />
       <ProductDetailsFooter
         tags={product?.tags || []}
         posted={product?.created_at}

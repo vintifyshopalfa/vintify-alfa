@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Funnel_Display, Inter } from "next/font/google"
+import { Funnel_Display } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@medusajs/ui"
 import Head from "next/head"
@@ -10,13 +10,6 @@ const funnelDisplay = Funnel_Display({
   variable: "--font-funnel-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
-})
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
 })
 
 export const metadata: Metadata = {
@@ -125,8 +118,7 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://api.mercurjs.com" />
       </Head>
       <body
-        className={`${inter.variable} ${funnelDisplay.className} antialiased bg-primary text-secondary relative font-sans`}
-        style={{ fontFamily: "var(--font-inter, 'Inter', system-ui, sans-serif)" }}
+        className={`${funnelDisplay.className} antialiased bg-primary text-secondary relative`}
       >
         <Providers cart={cart}>{children}</Providers>
         <Toaster position="top-right" />

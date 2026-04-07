@@ -6,7 +6,6 @@ import {
   HomeProductSection,
   ShopByStyleSection,
 } from "@/components/sections"
-import { TrendingSection } from "@/components/sections/TrendingSection/TrendingSection"
 
 import type { Metadata } from "next"
 import { headers } from "next/headers"
@@ -176,16 +175,13 @@ export default async function Home({
         ]}
       />
       <div className="px-4 lg:px-8 w-full">
-        <TrendingSection locale={locale} heading="Trending Now" />
+        <HomeProductSection heading="trending listings" locale={locale} home />
       </div>
       <div className="px-4 lg:px-8 w-full">
         <HomeCategories heading="SHOP BY CATEGORY" />
       </div>
       <BannerSection />
       <ShopByStyleSection />
-      <div className="px-4 lg:px-8 w-full">
-        <HomeProductSection heading="Latest Listings" locale={locale} home />
-      </div>
       <BlogSection />
     </main>
   )

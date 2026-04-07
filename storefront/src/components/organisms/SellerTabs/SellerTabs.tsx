@@ -3,7 +3,7 @@ import { ProductListingSkeleton } from "../ProductListingSkeleton/ProductListing
 import { AlgoliaProductsListing, ProductListing } from "@/components/sections"
 import { TabsContent, TabsList } from "@/components/molecules"
 import { SellerReviewTab } from "@/components/cells"
-import { SellerPostsTab } from "@/components/cells/SellerPostsTab/SellerPostsTab"
+import { getRegion } from "@/lib/data/regions"
 
 const ALGOLIA_ID = process.env.NEXT_PUBLIC_ALGOLIA_ID
 const ALGOLIA_SEARCH_KEY = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY
@@ -23,8 +23,10 @@ export const SellerTabs = ({
 }) => {
   const tabsList = [
     { label: "products", link: `/sellers/${seller_handle}/` },
-    { label: "reviews", link: `/sellers/${seller_handle}/reviews` },
-    { label: "posts", link: `/sellers/${seller_handle}/posts` },
+    {
+      label: "reviews",
+      link: `/sellers/${seller_handle}/reviews`,
+    },
   ]
 
   return (
@@ -46,11 +48,6 @@ export const SellerTabs = ({
       <TabsContent value="reviews" activeTab={tab}>
         <Suspense>
           <SellerReviewTab seller_handle={seller_handle} />
-        </Suspense>
-      </TabsContent>
-      <TabsContent value="posts" activeTab={tab}>
-        <Suspense>
-          <SellerPostsTab seller_id={seller_id} />
         </Suspense>
       </TabsContent>
     </div>
