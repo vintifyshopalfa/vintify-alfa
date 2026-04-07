@@ -5,7 +5,7 @@
   "scripts": {
     "wait": "await-backend",
     "launcher": "launch-storefront",
-    "dev": "pnpm run wait && pnpm run launcher dev",
+    "dev": "pnpm run wait && rm -rf .next && pnpm run launcher dev",
     "build": "pnpm run wait && pnpm run launcher build",
     "start": "pnpm run launcher start",
     "lint": "next lint"
