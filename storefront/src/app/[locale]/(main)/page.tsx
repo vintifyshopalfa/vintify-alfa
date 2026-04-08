@@ -112,6 +112,7 @@ export default async function Home({
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
+  const isPtBr = locale?.toLowerCase() === "br"
   const { posts, count } = await getFeed(1, 8)
 
   const headersList = await headers()
@@ -123,8 +124,36 @@ export default async function Home({
     process.env.NEXT_PUBLIC_SITE_NAME ||
     "Mercur B2C Demo - Marketplace Storefront"
 
+  const homeCopy = isPtBr
+    ? {
+        heroHeading: "Seu estilo, do seu jeito",
+        heroParagraph:
+          "Compre, venda e descubra peças e itens únicos da comunidade Vintify.",
+        buyNow: "Comprar agora",
+        sellNow: "Vender agora",
+        trendingHeading: "em alta agora",
+        categoryHeading: "COMPRAR POR CATEGORIA",
+        communityHeading: "Comunidade Vintify",
+        communityParagraph:
+          "Feed social personalizado com posts, comentários e descobertas em tempo real.",
+        styleHeading: "COMPRAR POR ESTILO",
+      }
+    : {
+        heroHeading: "Snag your style in a flash",
+        heroParagraph:
+          "Buy, sell, and discover pre-loved gems from the trendiest brands.",
+        buyNow: "Buy now",
+        sellNow: "Sell now",
+        trendingHeading: "trending listings",
+        categoryHeading: "SHOP BY CATEGORY",
+        communityHeading: "Vintify Community",
+        communityParagraph:
+          "Personalized social feed with posts, comments, and real-time discoveries.",
+        styleHeading: "SHOP BY STYLE",
+      }
+
   return (
-    <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start text-primary">
+    <main className="flex flex-col gap-10 lg:gap-12 row-start-2 items-center sm:items-start text-primary pb-12">
       <link
         rel="preload"
         as="image"
@@ -163,30 +192,30 @@ export default async function Home({
 
       <Hero
         image="/images/hero/Image.jpg"
-        heading="Snag your style in a flash"
-        paragraph="Buy, sell, and discover pre-loved gems from the trendiest brands."
+        heading={homeCopy.heroHeading}
+        paragraph={homeCopy.heroParagraph}
         buttons={[
-          { label: "Buy now", path: "/categories" },
+          { label: homeCopy.buyNow, path: "/categories" },
           {
-            label: "Sell now",
+            label: homeCopy.sellNow,
             path:
               process.env.NEXT_PUBLIC_VENDOR_URL ||
               "https://vendor.mercurjs.com",
           },
         ]}
       />
-      <div className="px-4 lg:px-8 w-full">
-        <HomeProductSection heading="trending listings" locale={locale} home />
+      <div className="px-4 lg:px-8 w-full max-w-[1440px] mx-auto">
+        <HomeProductSection heading={homeCopy.trendingHeading} locale={locale} home />
       </div>
-      <div className="px-4 lg:px-8 w-full">
-        <HomeCategories heading="SHOP BY CATEGORY" />
+      <div className="px-4 lg:px-8 w-full max-w-[1440px] mx-auto">
+        <HomeCategories heading={homeCopy.categoryHeading} />
       </div>
       <section className="px-4 lg:px-8 w-full max-w-3xl mx-auto">
-        <h2 className="heading-md mb-2">Comunidade Vintify</h2>
-        <p className="text-secondary mb-4">Feed social personalizado com posts, comentários e descobertas em tempo real.</p>
+        <h2 className="heading-md mb-2">{homeCopy.communityHeading}</h2>
+        <p className="text-secondary mb-4">{homeCopy.communityParagraph}</p>
         <FeedInfiniteScroll initialPosts={posts} initialCount={count} limit={8} compact />
       </section>
-      <ShopByStyleSection />
+      <ShopByStyleSection heading={homeCopy.styleHeading} />
     </main>
   )
 }

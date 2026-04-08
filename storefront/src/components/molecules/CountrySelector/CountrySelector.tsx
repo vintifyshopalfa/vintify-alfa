@@ -30,6 +30,7 @@ type CountrySelectProps = {
 
 const CountrySelect = ({ regions }: CountrySelectProps) => {
   const t = useTranslations("header")
+  const ALLOWED_COUNTRIES = new Set(["us", "br"])
   const [current, setCurrent] = useState<
     | { country: string | undefined; region: string; label: string | undefined }
     | undefined
@@ -49,14 +50,22 @@ const CountrySelect = ({ regions }: CountrySelectProps) => {
         }))
       })
       .flat()
+      .filter((o) => o?.country && ALLOWED_COUNTRIES.has(o.country.toLowerCase()))
       .sort((a, b) => (a?.label ?? "").localeCompare(b?.label ?? ""))
   }, [regions])
 
   useEffect(() => {
+    if (!options?.length) return
+
     if (countryCode) {
-      const option = options?.find((o) => o?.country === countryCode)
-      setCurrent(option)
+      const option = options.find(
+        (o) => o?.country?.toLowerCase() === countryCode.toString().toLowerCase()
+      )
+      setCurrent(option ?? options[0])
+      return
     }
+
+    setCurrent(options[0])
   }, [options, countryCode])
 
   const handleChange = async (option: CountryOption) => {
@@ -87,12 +96,8 @@ const CountrySelect = ({ regions }: CountrySelectProps) => {
       <Label className="label-md hidden md:block">{t("shippingTo")}</Label>
       <div>
         <Listbox
+          value={current}
           onChange={handleChange}
-          defaultValue={
-            countryCode
-              ? options?.find((o) => o?.country === countryCode)
-              : undefined
-          }
         >
           <ListboxButton className="relative w-16 flex justify-between items-center h-10 bg-component-secondary text-left  cursor-default focus:outline-none border rounded-lg focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-white focus-visible:ring-offset-gray-300 focus-visible:ring-offset-2 focus-visible:border-gray-300 text-base-regular">
             <div className="txt-compact-small flex items-start mx-auto">
