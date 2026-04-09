@@ -7,11 +7,11 @@ import {
 import useFilters from '@/hooks/useFilters';
 
 const filters = [
-  { label: 'Sneakers', amount: 140 },
-  { label: 'Boots', amount: 100 },
-  { label: 'Flat Shoes', amount: 100 },
-  { label: 'High Heels', amount: 31 },
-  { label: 'Sandals', amount: 1 },
+  { label: 'Jogos', amount: 140 },
+  { label: 'Roupas', amount: 100 },
+  { label: 'Eletronicos', amount: 100 },
+  { label: 'Esportes', amount: 31 },
+  { label: 'Acessorios', amount: 1 },
 ];
 
 export const ProductFilter = () => {
